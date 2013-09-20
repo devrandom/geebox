@@ -1,0 +1,3 @@
+[submodule "external/aFileChooser"]
+	path = external/aFileChooser
+	url = https://github.com/devrandom/aFileChooser.git

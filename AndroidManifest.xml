@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="info.guardianproject.geebox"
     android:versionCode="1"
-    android:versionName="1.0" >
+    android:versionName="1.0" xmlns:tools="http://schemas.android.com/tools">
 
     <uses-sdk
         android:minSdkVersion="14"
@@ -13,6 +13,7 @@
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
+        
         <activity
             android:name="info.guardianproject.geebox.MainActivity"
             android:label="@string/app_name" >
@@ -22,6 +23,25 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        
+        <!-- Dataplug -->
+        <service android:name=".GDataplugService" android:exported="true">
+            <intent-filter>
+                <action android:name="info.guardianproject.otr.app.im.dataplug.DISCOVER" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="info.guardianproject.otr.app.im.dataplug.ACTIVATE" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="info.guardianproject.otr.app.im.dataplug.OUTGOING_RESPONSE" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="info.guardianproject.otr.app.im.dataplug.INCOMING_REQUEST" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="info.guardianproject.otr.app.im.dataplug.INCOMING_RESPONSE" />
+            </intent-filter>
+        </service>
     </application>
 
 </manifest>

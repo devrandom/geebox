@@ -24,6 +24,24 @@
             </intent-filter>
         </activity>
         
+        <activity
+            android:name="info.guardianproject.geebox.browser.TestActivity"
+            android:label="Browser Tester" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        
+        <activity
+            android:name="info.guardianproject.geebox.browser.FolderBrowser" >
+        </activity>
+        
+        <activity
+            android:name="info.guardianproject.geebox.browser.FileBrowser" >
+        </activity>
+        
         <!-- Dataplug -->
         <service android:name=".GDataplugService" android:exported="true">
             <intent-filter>

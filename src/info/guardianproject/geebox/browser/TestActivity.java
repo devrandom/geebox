@@ -7,6 +7,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.TextView;
 import android.widget.Toast;
 
 public class TestActivity extends Activity {
@@ -73,11 +74,11 @@ public class TestActivity extends Activity {
 	}
 
 	private void doFolderPicked(Uri aUri) {
-		Toast.makeText(this, "Folder picked: " + aUri, Toast.LENGTH_LONG).show();
+		((TextView)findViewById(R.id.test_source_name)).setText( aUri.toString() );
 	}
 	
 	private void doFilePicked(Uri aUri) {
-		Toast.makeText(this, "File picked: " + aUri, Toast.LENGTH_LONG).show();
+		((TextView)findViewById(R.id.test_source_name)).setText( aUri.toString() );
 	}
 
 }

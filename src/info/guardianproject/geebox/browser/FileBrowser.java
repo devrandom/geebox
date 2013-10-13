@@ -16,7 +16,7 @@ import com.ipaulpro.afilechooser.FileChooserActivity;
  */
 public class FileBrowser extends FileChooserActivity {
 
-	public static void startActivity(Activity aActivity, int aRequestCode) {
+	public static void startActivityForResult(Activity aActivity, int aRequestCode) {
 		Intent intent = new Intent(aActivity, FolderBrowser.class);
 		intent.setAction( ACTION_FILE_BROWSER );
 		aActivity.startActivityForResult(intent, aRequestCode);

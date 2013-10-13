@@ -26,4 +26,28 @@
         android:background="#ffccccff"
         android:lines="4" />
 
+    <Button
+        android:id="@+id/test_rename"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="2dip"
+        android:enabled="false"
+        android:text="Rename" />
+
+    <Button
+        android:id="@+id/test_delete"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="2dip"
+        android:enabled="false"
+        android:text="Delete" />
+
+    <Button
+        android:id="@+id/test_move"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="2dip"
+        android:enabled="false"
+        android:text="Move" />
+
 </LinearLayout>

@@ -1,5 +1,7 @@
 package info.guardianproject.geebox.browser;
 
+import java.io.File;
+
 import info.guardianproject.geebox.R;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -87,10 +89,14 @@ public class TestActivity extends Activity {
 		final AlertDialog alertDialog = builder.create();
 		alertDialog.getLayoutInflater().inflate(R.layout.test_rename, frameView);
 		TextView sourceTextView = (TextView) frameView.findViewById( R.id.test_rename_source) ;
-		sourceTextView.setText( aSource.getPath() );
+		String sourceName = aSource.getPath().substring(aSource.getPath().lastIndexOf(File.separator)+1) ;
+		sourceTextView.setText( sourceName );
+		EditText targetEditText = (EditText) frameView.findViewById( R.id.test_rename_target);
+		targetEditText.setText( sourceName );
+
 		alertDialog.show();
 	}
-	
+		
 	private void doRename( Uri aSource, String aTarget ) {
 		try {
 			FileSystem.rename( aSource, aTarget ) ;

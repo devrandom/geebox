@@ -5,6 +5,7 @@ import java.io.File;
 import info.guardianproject.geebox.R;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
@@ -70,41 +71,19 @@ public class TestActivity extends Activity {
 		FolderBrowser.startActivity(aActivity, REQUEST_CODE_FOLDER_BROWSER);
 	}
 	
-	protected void onClickRename(Activity aActivity, final Uri aSource ) {
-		final FrameLayout frameView = new FrameLayout(aActivity);
-		
-		AlertDialog.Builder builder = new AlertDialog.Builder(aActivity)
-		.setTitle("Rename")
-		.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+	protected void onClickRename(final Activity aActivity, final Uri aSourceUri ) {
+		FileDialog.Rename(aActivity, aSourceUri, new FileDialog.DialogResult() {
 			@Override
-			public void onClick(DialogInterface dialog, int which) {
-				EditText targetEditText = (EditText) frameView.findViewById( R.id.test_rename_target);
-				String target = targetEditText.getText().toString();
-				doRename( aSource, target ) ;
+			public void callback(Object... args) {
+				try {
+					FileSystem.rename( aSourceUri, (String)args[0] ) ;
+				} catch( Throwable t ) {
+					Toast.makeText(aActivity, "Rename failed: " + t.getMessage(), Toast.LENGTH_LONG).show();
+				}
 			}
-		})
-		.setNegativeButton("Cancel", null );
-		builder.setView(frameView);
-
-		final AlertDialog alertDialog = builder.create();
-		alertDialog.getLayoutInflater().inflate(R.layout.test_rename, frameView);
-		TextView sourceTextView = (TextView) frameView.findViewById( R.id.test_rename_source) ;
-		String sourceName = aSource.getPath().substring(aSource.getPath().lastIndexOf(File.separator)+1) ;
-		sourceTextView.setText( sourceName );
-		EditText targetEditText = (EditText) frameView.findViewById( R.id.test_rename_target);
-		targetEditText.setText( sourceName );
-
-		alertDialog.show();
+		});
 	}
-		
-	private void doRename( Uri aSource, String aTarget ) {
-		try {
-			FileSystem.rename( aSource, aTarget ) ;
-		} catch( Throwable t ) {
-			Toast.makeText(this, "Rename failed: " + t.getMessage(), Toast.LENGTH_LONG);
-		}
-	}
-
+	
 	protected void onClickDelete(Activity aActivity) {
 	}
 	protected void onClickMove(Activity aActivity) {

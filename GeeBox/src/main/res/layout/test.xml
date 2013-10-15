@@ -1,19 +1,53 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     android:padding="10dip" >
 
     <Button
-	    android:id="@+id/test_pick_folder"
+        android:id="@+id/test_pick_folder"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_margin="2dip"
         android:text="Pick Folder" />
-    
+
     <Button
-	    android:id="@+id/test_pick_file"
+        android:id="@+id/test_pick_file"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_margin="2dip"
         android:text="Pick File" />
-    
+
+    <TextView
+        android:id="@+id/test_source_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="6dip"
+        android:background="#ffccccff"
+        android:lines="4" />
+
+    <Button
+        android:id="@+id/test_rename"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="2dip"
+        android:enabled="false"
+        android:text="Rename" />
+
+    <Button
+        android:id="@+id/test_delete"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="2dip"
+        android:enabled="false"
+        android:text="Delete" />
+
+    <Button
+        android:id="@+id/test_move"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="2dip"
+        android:enabled="false"
+        android:text="Move" />
+
 </LinearLayout>

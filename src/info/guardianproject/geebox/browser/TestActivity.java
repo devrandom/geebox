@@ -81,6 +81,7 @@ public class TestActivity extends Activity {
 				} catch( Throwable t ) {
 					Toast.makeText(aActivity, "Rename failed: " + t.getMessage(), Toast.LENGTH_LONG).show();
 				}
+				setPicked(null);
 			}
 		});
 	}
@@ -94,6 +95,7 @@ public class TestActivity extends Activity {
 				} catch( Throwable t ) {
 					Toast.makeText(aActivity, "Delete failed: " + t.getMessage(), Toast.LENGTH_LONG).show();
 				}
+				setPicked(null);
 			}
 		});
 	}
@@ -112,6 +114,7 @@ public class TestActivity extends Activity {
 				} catch( Throwable t ) {
 					Toast.makeText(aActivity, "Rename failed: " + t.getMessage(), Toast.LENGTH_LONG).show();
 				}
+				setPicked(null);
 			}
 		});
 	}
@@ -160,16 +163,15 @@ public class TestActivity extends Activity {
 
 	Uri mPickedUri ;
 	private void doFolderPicked(Uri aUri) {
-		mPickedUri = aUri ;
 		setPicked( aUri ) ;
 	}
 	
 	private void doFilePicked(Uri aUri) {
-		mPickedUri = aUri ;
 		setPicked( aUri ) ;
 	}
 	
 	private void setPicked(Uri aUri) {
+		mPickedUri = aUri ;
 		if( aUri == null ) {
 			((TextView)findViewById(R.id.test_source_name)).setText( "" );
 			((Button)findViewById(R.id.test_rename)).setEnabled(false);

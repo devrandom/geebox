@@ -22,6 +22,7 @@ public class TestActivity extends Activity {
 
 	private static final int REQUEST_CODE_FOLDER_BROWSER = 6661;
 	private static final int REQUEST_CODE_FILE_BROWSER = 6662;
+	private static final int REQUEST_CODE_FOLDER_BROWSER_MOVE = 6663;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -52,7 +53,7 @@ public class TestActivity extends Activity {
 		aActivity.findViewById(R.id.test_delete).setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				onClickDelete(aActivity);
+				onClickDelete(aActivity, mPickedUri);
 			}
 		});
 		aActivity.findViewById(R.id.test_move).setOnClickListener(new OnClickListener() {
@@ -84,9 +85,35 @@ public class TestActivity extends Activity {
 		});
 	}
 	
-	protected void onClickDelete(Activity aActivity) {
+	protected void onClickDelete(final Activity aActivity, final Uri aSourceUri) {
+		FileDialog.Delete(aActivity, aSourceUri, new FileDialog.DialogResult() {
+			@Override
+			public void callback(Object... args) {
+				try {
+					FileSystem.delete( aSourceUri ) ;
+				} catch( Throwable t ) {
+					Toast.makeText(aActivity, "Delete failed: " + t.getMessage(), Toast.LENGTH_LONG).show();
+				}
+			}
+		});
 	}
+	
 	protected void onClickMove(Activity aActivity) {
+		FolderBrowser.startActivity(aActivity, REQUEST_CODE_FOLDER_BROWSER_MOVE);
+	}
+	
+	
+	protected void onActivityResultMove(final Activity aActivity, final Uri aSourceUri, final Uri aTargetUri) {
+		FileDialog.Move(aActivity, aSourceUri, aTargetUri, new FileDialog.DialogResult() {
+			@Override
+			public void callback( Object ... args ) {
+				try {
+					FileSystem.move( aSourceUri, aTargetUri ) ;
+				} catch( Throwable t ) {
+					Toast.makeText(aActivity, "Rename failed: " + t.getMessage(), Toast.LENGTH_LONG).show();
+				}
+			}
+		});
 	}
 	
 
@@ -105,6 +132,13 @@ public class TestActivity extends Activity {
 				return ;
 			}
 			doFilePicked( data.getData() );
+			break ;
+			
+		case REQUEST_CODE_FOLDER_BROWSER_MOVE:
+			if( ! isOK( resultCode, data )) {
+				return ;
+			}
+			onActivityResultMove( this, mPickedUri, data.getData() );
 			break ;
 			
 			default:

@@ -1,8 +1,11 @@
 package info.guardianproject.geebox.browser;
 
+import java.io.File;
+
 import info.guardianproject.geebox.R;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
@@ -19,6 +22,7 @@ public class TestActivity extends Activity {
 
 	private static final int REQUEST_CODE_FOLDER_BROWSER = 6661;
 	private static final int REQUEST_CODE_FILE_BROWSER = 6662;
+	private static final int REQUEST_CODE_FOLDER_BROWSER_MOVE = 6663;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -49,7 +53,7 @@ public class TestActivity extends Activity {
 		aActivity.findViewById(R.id.test_delete).setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				onClickDelete(aActivity);
+				onClickDelete(aActivity, mPickedUri);
 			}
 		});
 		aActivity.findViewById(R.id.test_move).setOnClickListener(new OnClickListener() {
@@ -68,40 +72,51 @@ public class TestActivity extends Activity {
 		FolderBrowser.startActivity(aActivity, REQUEST_CODE_FOLDER_BROWSER);
 	}
 	
-	protected void onClickRename(Activity aActivity, final Uri aSource ) {
-		final FrameLayout frameView = new FrameLayout(aActivity);
-		
-		AlertDialog.Builder builder = new AlertDialog.Builder(aActivity)
-		.setTitle("Rename")
-		.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+	protected void onClickRename(final Activity aActivity, final Uri aSourceUri ) {
+		FileDialog.Rename(aActivity, aSourceUri, new FileDialog.DialogResult() {
 			@Override
-			public void onClick(DialogInterface dialog, int which) {
-				EditText targetEditText = (EditText) frameView.findViewById( R.id.test_rename_target);
-				String target = targetEditText.getText().toString();
-				doRename( aSource, target ) ;
+			public void callback(Object... args) {
+				try {
+					FileSystem.rename( aSourceUri, (String)args[0] ) ;
+				} catch( Throwable t ) {
+					Toast.makeText(aActivity, "Rename failed: " + t.getMessage(), Toast.LENGTH_LONG).show();
+				}
+				setPicked(null);
 			}
-		})
-		.setNegativeButton("Cancel", null );
-		builder.setView(frameView);
-
-		final AlertDialog alertDialog = builder.create();
-		alertDialog.getLayoutInflater().inflate(R.layout.test_rename, frameView);
-		TextView sourceTextView = (TextView) frameView.findViewById( R.id.test_rename_source) ;
-		sourceTextView.setText( aSource.getPath() );
-		alertDialog.show();
+		});
 	}
 	
-	private void doRename( Uri aSource, String aTarget ) {
-		try {
-			FileSystem.rename( aSource, aTarget ) ;
-		} catch( Throwable t ) {
-			Toast.makeText(this, "Rename failed: " + t.getMessage(), Toast.LENGTH_LONG);
-		}
+	protected void onClickDelete(final Activity aActivity, final Uri aSourceUri) {
+		FileDialog.Delete(aActivity, aSourceUri, new FileDialog.DialogResult() {
+			@Override
+			public void callback(Object... args) {
+				try {
+					FileSystem.delete( aSourceUri ) ;
+				} catch( Throwable t ) {
+					Toast.makeText(aActivity, "Delete failed: " + t.getMessage(), Toast.LENGTH_LONG).show();
+				}
+				setPicked(null);
+			}
+		});
 	}
-
-	protected void onClickDelete(Activity aActivity) {
-	}
+	
 	protected void onClickMove(Activity aActivity) {
+		FolderBrowser.startActivity(aActivity, REQUEST_CODE_FOLDER_BROWSER_MOVE);
+	}
+	
+	
+	protected void onActivityResultMove(final Activity aActivity, final Uri aSourceUri, final Uri aTargetUri) {
+		FileDialog.Move(aActivity, aSourceUri, aTargetUri, new FileDialog.DialogResult() {
+			@Override
+			public void callback( Object ... args ) {
+				try {
+					FileSystem.move( aSourceUri, aTargetUri ) ;
+				} catch( Throwable t ) {
+					Toast.makeText(aActivity, "Rename failed: " + t.getMessage(), Toast.LENGTH_LONG).show();
+				}
+				setPicked(null);
+			}
+		});
 	}
 	
 
@@ -120,6 +135,13 @@ public class TestActivity extends Activity {
 				return ;
 			}
 			doFilePicked( data.getData() );
+			break ;
+			
+		case REQUEST_CODE_FOLDER_BROWSER_MOVE:
+			if( ! isOK( resultCode, data )) {
+				return ;
+			}
+			onActivityResultMove( this, mPickedUri, data.getData() );
 			break ;
 			
 			default:
@@ -141,16 +163,15 @@ public class TestActivity extends Activity {
 
 	Uri mPickedUri ;
 	private void doFolderPicked(Uri aUri) {
-		mPickedUri = aUri ;
 		setPicked( aUri ) ;
 	}
 	
 	private void doFilePicked(Uri aUri) {
-		mPickedUri = aUri ;
 		setPicked( aUri ) ;
 	}
 	
 	private void setPicked(Uri aUri) {
+		mPickedUri = aUri ;
 		if( aUri == null ) {
 			((TextView)findViewById(R.id.test_source_name)).setText( "" );
 			((Button)findViewById(R.id.test_rename)).setEnabled(false);

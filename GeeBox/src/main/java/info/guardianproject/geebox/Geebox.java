@@ -1,5 +1,8 @@
 package info.guardianproject.geebox;
 
+import android.content.ContentResolver;
+import android.content.ContentValues;
+import android.database.Cursor;
 import android.net.Uri;
 import android.provider.BaseColumns;
 
@@ -37,8 +40,8 @@ public final class Geebox {
     public static final class PeerShares implements BaseColumns {
         public static final Uri CONTENT_URI = Uri.parse(SCHEME + AUTHORITY + "/peer_shares");
 
-        public static final String COLUMN_NAME_PEER = "peer";
-        public static final String COLUMN_NAME_SHARE = "share";
+        public static final String COLUMN_NAME_PEER = "peer_id";
+        public static final String COLUMN_NAME_SHARE = "share_id";
         /** share reference on peer */
         public static final String COLUMN_NAME_REFERENCE = "reference";
 
@@ -53,7 +56,7 @@ public final class Geebox {
         /** Opaque reference for remote */
         public static final String COLUMN_NAME_REFERENCE = "reference";
         /** share / directory / name is the full path */
-        public static final String COLUMN_NAME_SHARE = "share";
+        public static final String COLUMN_NAME_SHARE = "share_id";
         public static final String COLUMN_NAME_DIRECTORY = "directory";
         public static final String COLUMN_NAME_NAME = "name";
         public static final String COLUMN_NAME_OPERATION = "operation";
@@ -64,12 +67,12 @@ public final class Geebox {
         public static final Uri CONTENT_URI = Uri.parse(SCHEME + AUTHORITY + "/virtuals");
 
         /** share / directory / name is the full path */
-        public static final String COLUMN_NAME_SHARE = "share";
+        public static final String COLUMN_NAME_SHARE = "share_id";
         public static final String COLUMN_NAME_DIRECTORY = "directory";
         public static final String COLUMN_NAME_NAME = "name";
 
         /** The peer where this is hosted */
-        public static final String COLUMN_NAME_PEER = "peer";
+        public static final String COLUMN_NAME_PEER = "peer_id";
 
         public static final String COLUMN_NAME_IS_DIR = "is_dir";
         public static final String COLUMN_NAME_SIZE = "size";
@@ -78,5 +81,76 @@ public final class Geebox {
 
         private Virtuals() {}
         public static final String TABLE_NAME = "virtuals";
+    }
+
+    public static long makeShare(ContentResolver aContentResolver, Uri aUri) {
+        String uri = aUri.toString();
+        long shareId = getShare(aContentResolver, aUri);
+        if (shareId >= 0) return shareId;
+        ContentValues values = new ContentValues();
+        values.put(Shares.COLUMN_NAME_DIRECTORY, uri);
+        Uri shareUri = aContentResolver.insert(Shares.CONTENT_URI, values);
+        return Long.parseLong(shareUri.getLastPathSegment());
+    }
+
+    public static long getShare(ContentResolver aContentResolver, Uri aUri) {
+        Cursor cursor =
+                aContentResolver.query(Shares.CONTENT_URI,
+                        null,
+                        Shares.COLUMN_NAME_DIRECTORY + "= ?",
+                        new String[] {aUri.toString()},
+                        null);
+        try {
+            if (cursor.moveToFirst()) {
+                return cursor.getLong(cursor.getColumnIndexOrThrow(Shares._ID));
+            }
+        } finally {
+            cursor.close();
+        }
+        return -1;
+    }
+
+    public static long makePeerShare(ContentResolver aContentResolver, long peerId, long shareId) {
+        Cursor cursor =
+                aContentResolver.query(PeerShares.CONTENT_URI,
+                        null,
+                        PeerShares.COLUMN_NAME_PEER + "= ? AND " +
+                                PeerShares.COLUMN_NAME_SHARE + " = ?"
+                        ,
+                        new String[] {String.valueOf(peerId), String.valueOf(shareId)},
+                        null);
+        try {
+            if (cursor.moveToFirst()) {
+                return cursor.getLong(cursor.getColumnIndexOrThrow(PeerShares._ID));
+            }
+        } finally {
+            cursor.close();
+        }
+        ContentValues values;
+        values = new ContentValues();
+        values.put(PeerShares.COLUMN_NAME_PEER, peerId);
+        values.put(PeerShares.COLUMN_NAME_SHARE, shareId);
+        Uri peerShareUri = aContentResolver.insert(PeerShares.CONTENT_URI, values);
+        return Long.parseLong(peerShareUri.getLastPathSegment());
+    }
+
+    public static long makePeer(ContentResolver aContentResolver, String contact) {
+        Cursor cursor =
+                aContentResolver.query(Peers.CONTENT_URI,
+                        null,
+                        Peers.COLUMN_NAME_ADDRESS + "= ?",
+                        new String[] {contact},
+                        null);
+        try {
+            if (cursor.moveToFirst()) {
+                return cursor.getLong(cursor.getColumnIndexOrThrow(Peers._ID));
+            }
+        } finally {
+            cursor.close();
+        }
+        ContentValues values = new ContentValues();
+        values.put(Peers.COLUMN_NAME_ADDRESS, contact);
+        Uri peerUri = aContentResolver.insert(Peers.CONTENT_URI, values);
+        return Long.parseLong(peerUri.getLastPathSegment());
     }
 }

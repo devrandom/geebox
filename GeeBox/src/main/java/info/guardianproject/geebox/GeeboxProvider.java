@@ -12,10 +12,12 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.text.TextUtils;
+import android.util.Base64;
 import android.util.Log;
 
 import com.google.common.collect.Maps;
 
+import java.security.SecureRandom;
 import java.util.Map;
 
 import static info.guardianproject.geebox.Geebox.PeerShares;
@@ -29,10 +31,11 @@ import static info.guardianproject.geebox.Geebox.Virtuals;
  */
 public class GeeboxProvider extends ContentProvider {
     private static final String TAG = "GeeBox.Provider";
-    private static final int DATABASE_VERSION = 100;
+    private static final int DATABASE_VERSION = 101;
     private static final String DATABASE_NAME = "geebox.db";
 
     private DatabaseHelper mHelper;
+    private SecureRandom mRandom;
 
     static class DatabaseHelper extends SQLiteOpenHelper {
 
@@ -60,10 +63,11 @@ public class GeeboxProvider extends ContentProvider {
                     + ");");
 
             db.execSQL("CREATE TABLE " + PeerShares.TABLE_NAME + " ("
-                    + PeerShares.COLUMN_NAME_PEER + " INTEGER NOT NULL"
+                    + PeerShares._ID + " INTEGER PRIMARY KEY"
+                    + "," + PeerShares.COLUMN_NAME_PEER + " INTEGER NOT NULL"
                     + "," + PeerShares.COLUMN_NAME_SHARE + " INTEGER NOT NULL"
                     + "," + PeerShares.COLUMN_NAME_REFERENCE + " TEXT NOT NULL"
-                    + ", PRIMARY KEY(" + PeerShares.COLUMN_NAME_SHARE+ ", "
+                    + ", UNIQUE(" + PeerShares.COLUMN_NAME_SHARE+ ", "
                     + PeerShares.COLUMN_NAME_PEER + ")"
                     + ");");
 
@@ -139,11 +143,12 @@ public class GeeboxProvider extends ContentProvider {
     @Override
     public boolean onCreate() {
         mHelper = new DatabaseHelper(getContext());
+        mRandom = new SecureRandom(); // TODO(miron) fix Android SecureRandom breakage
         return true;
     }
 
     @Override
-    public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
+    public Cursor query(Uri uri, String[] projection, String where, String[] whereArgs, String sortOrder) {
         SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
         int match = sUriMatcher.match(uri);
         if (match < 0)
@@ -156,8 +161,9 @@ public class GeeboxProvider extends ContentProvider {
                 break;
             case PEER_SHARES:
                 if (TextUtils.isEmpty(sortOrder)) {
-                    sortOrder = "share, peer";
+                    sortOrder = "share_id, peer_id";
                 }
+                qb.setTables("peer_shares JOIN peers ON (peer_id = peers._id) JOIN shares ON (share_id = shares._id)");
                 break;
             case QUEUE:
                 break;
@@ -180,8 +186,8 @@ public class GeeboxProvider extends ContentProvider {
         Cursor c = qb.query(
                 db,            // The database to query
                 projection,    // The columns to return from the query
-                selection,     // The columns for the where clause
-                selectionArgs, // The values for the where clause
+                where,     // The columns for the where clause
+                whereArgs, // The values for the where clause
                 null,          // don't group the rows
                 null,          // don't filter by row groups
                 orderBy        // The sort order
@@ -208,8 +214,12 @@ public class GeeboxProvider extends ContentProvider {
             case PEERS:
                 break;
             case SHARES:
+                values.put(Shares.COLUMN_NAME_REFERENCE, makeReference());
+                if (!values.containsKey(Shares.COLUMN_NAME_STATUS))
+                    values.put(Shares.COLUMN_NAME_STATUS, "new");
                 break;
             case PEER_SHARES:
+                values.put(Shares.COLUMN_NAME_REFERENCE, makeReference());
                 break;
             case QUEUE:
                 break;
@@ -227,6 +237,12 @@ public class GeeboxProvider extends ContentProvider {
         Uri itemUri = ContentUris.withAppendedId(uri, rowId);
         getContext().getContentResolver().notifyChange(itemUri, null);
         return itemUri;
+    }
+
+    private String makeReference() {
+        byte[] bytes = new byte[16];
+        mRandom.nextBytes(new byte[16]);
+        return Base64.encodeToString(bytes, Base64.DEFAULT);
     }
 
     @Override

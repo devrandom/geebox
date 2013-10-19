@@ -1,30 +1,40 @@
 package info.guardianproject.geebox.browser;
 
-import java.io.File;
-
-import info.guardianproject.geebox.R;
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.Context;
-import android.content.DialogInterface;
+import android.app.Dialog;
+import android.app.LoaderManager;
+import android.content.CursorLoader;
 import android.content.Intent;
+import android.content.Loader;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
-import android.widget.EditText;
-import android.widget.FrameLayout;
+import android.widget.ListView;
+import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class TestActivity extends Activity {
+import info.guardianproject.geebox.Geebox;
+import info.guardianproject.geebox.R;
 
-	private static final int REQUEST_CODE_FOLDER_BROWSER = 6661;
+import static info.guardianproject.geebox.Geebox.Peers;
+import static info.guardianproject.geebox.Geebox.makePeer;
+import static info.guardianproject.geebox.Geebox.makePeerShare;
+import static info.guardianproject.geebox.Geebox.makeShare;
+
+public class TestActivity extends Activity implements LoaderManager.LoaderCallbacks<Cursor> {
+
+    private static final int REQUEST_CODE_FOLDER_BROWSER = 6661;
 	private static final int REQUEST_CODE_FILE_BROWSER = 6662;
 	private static final int REQUEST_CODE_FOLDER_BROWSER_MOVE = 6663;
+    public static final int REQUEST_CODE_INVITE_CONTACT = 6664;
+    private SimpleCursorAdapter mAdapter;
 
-	@Override
+    @Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.test);
@@ -45,26 +55,74 @@ public class TestActivity extends Activity {
 			}
 		});
 		aActivity.findViewById(R.id.test_rename).setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				onClickRename(aActivity, mPickedUri );
-			}
-		});
+            @Override
+            public void onClick(View v) {
+                onClickRename(aActivity, mPickedUri);
+            }
+        });
 		aActivity.findViewById(R.id.test_delete).setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				onClickDelete(aActivity, mPickedUri);
-			}
-		});
+            @Override
+            public void onClick(View v) {
+                onClickDelete(aActivity, mPickedUri);
+            }
+        });
 		aActivity.findViewById(R.id.test_move).setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				onClickMove(aActivity);
 			}
 		});
+        aActivity.findViewById(R.id.test_share).setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onClickShare(aActivity);
+            }
+        });
+        aActivity.findViewById(R.id.test_share).setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                onClickShare1(aActivity, mPickedUri);
+                return true;
+            }
+        });
 	}
 
-	protected void onClickFilePicker(Activity aActivity) {
+    private void onClickShare(Activity aActivity) {
+        Dialog aDialog;
+        AlertDialog.Builder bDialog = new AlertDialog.Builder(this);
+        ListView shareList = new ListView(this);
+        mAdapter = new SimpleCursorAdapter(
+                this,
+                android.R.layout.simple_list_item_1,
+                null,
+                new String[]{Peers.COLUMN_NAME_ADDRESS},
+                new int[]{android.R.id.text1},
+                0
+        );
+        shareList.setAdapter(mAdapter);
+        bDialog.setView(shareList);
+        aDialog = bDialog.create();
+        aDialog.show();
+        getLoaderManager().restartLoader(0, null, this);
+    }
+
+    private void onClickShare1(final Activity aActivity, final Uri aSourceUri) {
+        Intent intent = new Intent();
+        intent.setAction(Intent.ACTION_PICK);
+        intent.addCategory(Intent.CATEGORY_DEFAULT);
+        intent.setType("vnd.android.cursor.dir/imps-contacts");
+        startActivityForResult(intent, REQUEST_CODE_INVITE_CONTACT);
+    }
+
+
+    protected void onActivityResultInvite(Activity aActivity, Uri aDirectory, String aContact) {
+        long peerId = makePeer(getContentResolver(), aContact);
+        long shareId = makeShare(getContentResolver(), aDirectory);
+        long peerShareId = makePeerShare(getContentResolver(), peerId, shareId);
+        Toast.makeText(aActivity, "stuff " + peerShareId, Toast.LENGTH_LONG).show();
+    }
+
+    protected void onClickFilePicker(Activity aActivity) {
 		FileBrowser.startActivityForResult(aActivity, REQUEST_CODE_FILE_BROWSER);
 	}
 
@@ -118,34 +176,40 @@ public class TestActivity extends Activity {
 			}
 		});
 	}
-	
 
-	@Override
+    @Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		switch (requestCode) {
-		case REQUEST_CODE_FOLDER_BROWSER:
-			if( ! isOK( resultCode, data )) {
-				return ;
-			}
-			doFolderPicked( data.getData() );
-			break ;
-			
-		case REQUEST_CODE_FILE_BROWSER:
-			if( ! isOK( resultCode, data )) {
-				return ;
-			}
-			doFilePicked( data.getData() );
-			break ;
-			
-		case REQUEST_CODE_FOLDER_BROWSER_MOVE:
-			if( ! isOK( resultCode, data )) {
-				return ;
-			}
-			onActivityResultMove( this, mPickedUri, data.getData() );
-			break ;
-			
-			default:
-				throw new RuntimeException("Unknown requestCode: " + requestCode );
+            case REQUEST_CODE_FOLDER_BROWSER:
+                if( ! isOK( resultCode, data )) {
+                    return ;
+                }
+                doFolderPicked( data.getData() );
+                break ;
+
+            case REQUEST_CODE_FILE_BROWSER:
+                if( ! isOK( resultCode, data )) {
+                    return ;
+                }
+                doFilePicked( data.getData() );
+                break ;
+
+            case REQUEST_CODE_FOLDER_BROWSER_MOVE:
+                if( ! isOK( resultCode, data )) {
+                    return ;
+                }
+                onActivityResultMove( this, mPickedUri, data.getData() );
+                break ;
+
+            case REQUEST_CODE_INVITE_CONTACT:
+                if( ! isOK( resultCode, data )) {
+                    return ;
+                }
+                onActivityResultInvite( this, mPickedUri, data.getStringExtra("result") );
+                break ;
+
+            default:
+                throw new RuntimeException("Unknown requestCode: " + requestCode );
 		}
 	}
 
@@ -177,11 +241,32 @@ public class TestActivity extends Activity {
 			((Button)findViewById(R.id.test_rename)).setEnabled(false);
 			((Button)findViewById(R.id.test_delete)).setEnabled(false);
 			((Button)findViewById(R.id.test_move)).setEnabled(false);
+            ((Button)findViewById(R.id.test_share)).setEnabled(false);
 		} else {
 			((TextView)findViewById(R.id.test_source_name)).setText( aUri.toString() );
 			((Button)findViewById(R.id.test_rename)).setEnabled(true);
 			((Button)findViewById(R.id.test_delete)).setEnabled(true);
 			((Button)findViewById(R.id.test_move)).setEnabled(true);
+            ((Button)findViewById(R.id.test_share)).setEnabled(true);
 		}
 	}
+
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        if (mPickedUri == null)
+            return null;
+        return new CursorLoader(this, Geebox.PeerShares.CONTENT_URI, null,
+                Geebox.Shares.COLUMN_NAME_DIRECTORY + "= ?",
+                new String[] {mPickedUri.toString()}, null);
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        mAdapter.swapCursor(data);
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+        mAdapter.swapCursor(null);
+    }
 }

@@ -50,4 +50,12 @@
         android:enabled="false"
         android:text="Move" />
 
+    <Button
+        android:id="@+id/test_share"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="2dip"
+        android:enabled="false"
+        android:text="Share" />
+
 </LinearLayout>

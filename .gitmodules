@@ -1,3 +1,6 @@
 [submodule "external/aFileChooser"]
 	path = external/aFileChooser
 	url = https://github.com/devrandom/aFileChooser.git
+[submodule "external/Gibberbot"]
+	path = external/Gibberbot
+	url = https://github.com/devrandom/Gibberbot.git

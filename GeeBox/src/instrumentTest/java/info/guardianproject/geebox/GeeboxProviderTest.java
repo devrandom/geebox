@@ -10,6 +10,7 @@ import android.test.mock.MockContentResolver;
 
 import static info.guardianproject.geebox.Geebox.AUTHORITY;
 import static info.guardianproject.geebox.Geebox.Peers;
+import static info.guardianproject.geebox.Geebox.Shares;
 
 /**
  * @author devrandom
@@ -30,9 +31,22 @@ public class GeeboxProviderTest extends ProviderTestCase2<GeeboxProvider> {
     }
 
     public void testCreate() throws Exception {
-        ContentValues values = new ContentValues();
-        values.put(Peers.COLUMN_NAME_ADDRESS, "a@a");
-        mDb.insertOrThrow(Peers.TABLE_NAME, null, values);
+        Geebox.makePeer(mResolver, "a@a");
+
+        Cursor cursor = mResolver.query(Peers.CONTENT_URI, null, null, null, null);
+        assertNotNull(cursor);
+        assertEquals(1, cursor.getCount());
+        assertTrue(cursor.moveToFirst());
+        assertEquals("a@a", cursor.getString(cursor.getColumnIndexOrThrow(Peers.COLUMN_NAME_ADDRESS)));
+        cursor.close();
+
+        Geebox.makeShare(mResolver, Uri.parse("a/b/c"));
+        cursor = mResolver.query(Shares.CONTENT_URI, null, null, null, null);
+        assertNotNull(cursor);
+        assertEquals(1, cursor.getCount());
+        assertTrue(cursor.moveToFirst());
+        assertEquals("a/b/c", cursor.getString(cursor.getColumnIndexOrThrow(Shares.COLUMN_NAME_DIRECTORY)));
+        cursor.close();
     }
 
     public void testMutatePeer() throws Exception {
@@ -41,17 +55,9 @@ public class GeeboxProviderTest extends ProviderTestCase2<GeeboxProvider> {
         assertEquals(0, cursor.getCount());
         cursor.close();
         ContentValues values = new ContentValues();
-        values.put(Peers.COLUMN_NAME_ADDRESS, "a@a");
 
-        Uri insertUri = mResolver.insert(Peers.CONTENT_URI, values);
-        cursor = mResolver.query(Peers.CONTENT_URI, null, null, null, null);
-        assertNotNull(cursor);
-        assertEquals(1, cursor.getCount());
-        assertTrue(cursor.moveToFirst());
-        assertEquals("a@a", cursor.getString(cursor.getColumnIndexOrThrow(Peers.COLUMN_NAME_ADDRESS)));
-        cursor.close();
+        long id = Geebox.makePeer(mResolver, "a@a");
 
-        long id = Long.parseLong(insertUri.getLastPathSegment());
         values.put(Peers.COLUMN_NAME_QUEUE_REFERENCE, "abc");
         mResolver.update(ContentUris.withAppendedId(Peers.CONTENT_URI, id), values, null, null);
         cursor = mResolver.query(Peers.CONTENT_URI, null, null, null, null);

@@ -31,7 +31,7 @@ public class GeeboxProviderTest extends ProviderTestCase2<GeeboxProvider> {
     }
 
     public void testCreate() throws Exception {
-        Geebox.makePeer(mResolver, "a@a");
+        Geebox.makePeer(mResolver, "me@here", "a@a");
 
         Cursor cursor = mResolver.query(Peers.CONTENT_URI, null, null, null, null);
         assertNotNull(cursor);
@@ -56,7 +56,7 @@ public class GeeboxProviderTest extends ProviderTestCase2<GeeboxProvider> {
         cursor.close();
         ContentValues values = new ContentValues();
 
-        long id = Geebox.makePeer(mResolver, "a@a");
+        long id = Geebox.makePeer(mResolver, "me@here", "a@a");
 
         values.put(Peers.COLUMN_NAME_QUEUE_REFERENCE, "abc");
         mResolver.update(ContentUris.withAppendedId(Peers.CONTENT_URI, id), values, null, null);

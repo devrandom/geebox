@@ -115,8 +115,8 @@ public class TestActivity extends Activity implements LoaderManager.LoaderCallba
     }
 
 
-    protected void onActivityResultInvite(Activity aActivity, Uri aDirectory, String aContact) {
-        long peerId = makePeer(getContentResolver(), aContact);
+    protected void onActivityResultInvite(Activity aActivity, Uri aDirectory, String aAccount, String aPeer) {
+        long peerId = makePeer(getContentResolver(), aAccount, aPeer);
         long shareId = makeShare(getContentResolver(), aDirectory);
         long peerShareId = makePeerShare(getContentResolver(), peerId, shareId);
         Toast.makeText(aActivity, "stuff " + peerShareId, Toast.LENGTH_LONG).show();
@@ -205,7 +205,7 @@ public class TestActivity extends Activity implements LoaderManager.LoaderCallba
                 if( ! isOK( resultCode, data )) {
                     return ;
                 }
-                onActivityResultInvite( this, mPickedUri, data.getStringExtra("result") );
+                onActivityResultInvite( this, mPickedUri, data.getStringExtra("account"), data.getStringExtra("peer") );
                 break ;
 
             default:

@@ -31,7 +31,7 @@ import static info.guardianproject.geebox.Geebox.Virtuals;
  */
 public class GeeboxProvider extends ContentProvider {
     private static final String TAG = "GeeBox.Provider";
-    private static final int DATABASE_VERSION = 101;
+    private static final int DATABASE_VERSION = 102;
     private static final String DATABASE_NAME = "geebox.db";
 
     private DatabaseHelper mHelper;
@@ -50,6 +50,7 @@ public class GeeboxProvider extends ContentProvider {
         public void onCreate(SQLiteDatabase db) {
             db.execSQL("CREATE TABLE " + Peers.TABLE_NAME + " ("
                     + Peers._ID + " INTEGER PRIMARY KEY"
+                    + "," + Peers.COLUMN_NAME_ACCOUNT + " TEXT NOT NULL"
                     + "," + Peers.COLUMN_NAME_ADDRESS + " TEXT NOT NULL"
                     + "," + Peers.COLUMN_NAME_QUEUE_REFERENCE + " TEXT"
                     + "," + Peers.COLUMN_NAME_PEER_QUEUE_REFERENCE + " TEXT"
@@ -241,7 +242,7 @@ public class GeeboxProvider extends ContentProvider {
 
     private String makeReference() {
         byte[] bytes = new byte[16];
-        mRandom.nextBytes(new byte[16]);
+        mRandom.nextBytes(bytes);
         return Base64.encodeToString(bytes, Base64.DEFAULT);
     }
 

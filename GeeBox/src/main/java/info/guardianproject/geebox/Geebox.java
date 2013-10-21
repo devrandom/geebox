@@ -16,6 +16,7 @@ public final class Geebox {
     public static final class Peers implements BaseColumns{
         public static final Uri CONTENT_URI = Uri.parse(SCHEME + AUTHORITY + "/peers");
 
+        public static final String COLUMN_NAME_ACCOUNT = "account";
         public static final String COLUMN_NAME_ADDRESS = "address";
         /** A reference into the local queue to where the peer updated their state */
         public static final String COLUMN_NAME_QUEUE_REFERENCE = "queue_reference";
@@ -134,12 +135,12 @@ public final class Geebox {
         return Long.parseLong(peerShareUri.getLastPathSegment());
     }
 
-    public static long makePeer(ContentResolver aContentResolver, String contact) {
+    public static long makePeer(ContentResolver aContentResolver, String aAccount, String aContact) {
         Cursor cursor =
                 aContentResolver.query(Peers.CONTENT_URI,
                         null,
-                        Peers.COLUMN_NAME_ADDRESS + "= ?",
-                        new String[] {contact},
+                        Peers.COLUMN_NAME_ACCOUNT + "= ? AND " + Peers.COLUMN_NAME_ADDRESS + "= ?",
+                        new String[] {aAccount, aContact},
                         null);
         try {
             if (cursor.moveToFirst()) {
@@ -149,7 +150,8 @@ public final class Geebox {
             cursor.close();
         }
         ContentValues values = new ContentValues();
-        values.put(Peers.COLUMN_NAME_ADDRESS, contact);
+        values.put(Peers.COLUMN_NAME_ACCOUNT, aAccount);
+        values.put(Peers.COLUMN_NAME_ADDRESS, aContact);
         Uri peerUri = aContentResolver.insert(Peers.CONTENT_URI, values);
         return Long.parseLong(peerUri.getLastPathSegment());
     }

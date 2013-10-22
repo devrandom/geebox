@@ -21,8 +21,8 @@ import com.ipaulpro.afilechooser.FileChooserActivity;
  * @author liorsaar
  * 
  */
-public class FileBrowser extends FileChooserActivity {
-
+public class FileBrowser extends FileChooserActivity implements FileChooserActivity.VirtualsFactory {
+    // FIXME make VirtualsFactory an inner class
 	public static void startActivityForResult(Activity aActivity, int aRequestCode) {
 		Intent intent = new Intent(aActivity, FileBrowser.class);
 		intent.setAction( ACTION_FILE_BROWSER );
@@ -31,9 +31,7 @@ public class FileBrowser extends FileChooserActivity {
 	
 	@Override
 	public File createVirtual( Cursor aCursor ) {
-		String dir = aCursor.getString( aCursor.getColumnIndexOrThrow( Geebox.Shares.COLUMN_NAME_DIRECTORY ) );
-		String ROOT = "/" ; // FIXME we need a root
-		return new File( ROOT + dir ) ;
+        return Geebox.virtualToFile(aCursor);
 	}
 	
 	@Override
@@ -44,5 +42,9 @@ public class FileBrowser extends FileChooserActivity {
               Geebox.Virtuals.CONTENT_URI,
               null, null, null, null);
 	}
-	
+
+    @Override
+    public VirtualsFactory getVirtualsFactory() {
+        return this;
+    }
 }

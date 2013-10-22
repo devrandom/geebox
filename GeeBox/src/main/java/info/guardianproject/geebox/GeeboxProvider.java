@@ -31,7 +31,7 @@ import static info.guardianproject.geebox.Geebox.Virtuals;
  */
 public class GeeboxProvider extends ContentProvider {
     private static final String TAG = "GeeBox.Provider";
-    private static final int DATABASE_VERSION = 102;
+    private static final int DATABASE_VERSION = 104;
     private static final String DATABASE_NAME = "geebox.db";
 
     private DatabaseHelper mHelper;
@@ -68,7 +68,7 @@ public class GeeboxProvider extends ContentProvider {
                     + "," + PeerShares.COLUMN_NAME_PEER + " INTEGER NOT NULL"
                     + "," + PeerShares.COLUMN_NAME_SHARE + " INTEGER NOT NULL"
                     + "," + PeerShares.COLUMN_NAME_REFERENCE + " TEXT NOT NULL"
-                    + ", UNIQUE(" + PeerShares.COLUMN_NAME_SHARE+ ", "
+                    + ", UNIQUE(" + PeerShares.COLUMN_NAME_SHARE + ", "
                     + PeerShares.COLUMN_NAME_PEER + ")"
                     + ");");
 
@@ -81,6 +81,7 @@ public class GeeboxProvider extends ContentProvider {
                     + "," + Queue.COLUMN_NAME_DIRECTORY + " TEXT NOT NULL"
                     + "," + Queue.COLUMN_NAME_NAME + " TEXT NOT NULL"
                     + "," + Queue.COLUMN_NAME_OPERATION + " TEXT NOT NULL"
+                    + ", UNIQUE (" + Queue.COLUMN_NAME_SEQUENCE + ")"
                     + ");");
 
             db.execSQL("CREATE TABLE " + Virtuals.TABLE_NAME + " ("
@@ -91,8 +92,13 @@ public class GeeboxProvider extends ContentProvider {
                     + "," + Virtuals.COLUMN_NAME_PEER + " INTEGER NOT NULL"
                     + "," + Virtuals.COLUMN_NAME_IS_DIR + " BOOLEAN NOT NULL"
                     + "," + Virtuals.COLUMN_NAME_SIZE + " INTEGER NOT NULL"
-                    + "," + Virtuals.COLUMN_NAME_CREATED_AT + " TEXT NOT NULL"
-                    + "," + Virtuals.COLUMN_NAME_UPDATED_AT + " TEXT NOT NULL"
+                    + "," + Virtuals.COLUMN_NAME_CREATED_AT + " TEXT NOT NULL DEFAULT (DATETIME('now'))"
+                    + "," + Virtuals.COLUMN_NAME_UPDATED_AT + " TEXT NOT NULL DEFAULT (DATETIME('now'))"
+                    + ", UNIQUE("
+                    + Virtuals.COLUMN_NAME_SHARE + ","
+                    + Virtuals.COLUMN_NAME_DIRECTORY + ","
+                    + Virtuals.COLUMN_NAME_NAME
+                    + ")"
                     + ");");
         }
 
@@ -169,6 +175,17 @@ public class GeeboxProvider extends ContentProvider {
             case QUEUE:
                 break;
             case VIRTUALS:
+                qb.setTables("virtuals JOIN shares ON (share_id = shares._id)");
+                projection = new String[] {
+                        "virtuals._id as _id",
+                        "shares.directory as share_directory",
+                        "virtuals.directory as virtual_directory",
+                        "name",
+                        "is_dir",
+                        "size",
+                        "created_at",
+                        "updated_at"
+                };
                 break;
             default:
                 throw new IllegalArgumentException("Unknown URI " + uri);

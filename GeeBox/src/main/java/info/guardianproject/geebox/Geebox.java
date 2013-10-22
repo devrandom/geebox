@@ -6,6 +6,8 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.provider.BaseColumns;
 
+import java.io.File;
+
 /**
  * @author devrandom
  */
@@ -70,6 +72,7 @@ public final class Geebox {
         /** share / directory / name is the full path */
         public static final String COLUMN_NAME_SHARE = "share_id";
         public static final String COLUMN_NAME_DIRECTORY = "directory";
+        public static final String COLUMN_NAME_VIRTUALS_DIRECTORY = "virtuals.directory";
         public static final String COLUMN_NAME_NAME = "name";
 
         /** The peer where this is hosted */
@@ -79,6 +82,10 @@ public final class Geebox {
         public static final String COLUMN_NAME_SIZE = "size";
         public static final String COLUMN_NAME_CREATED_AT = "created_at";
         public static final String COLUMN_NAME_UPDATED_AT = "updated_at";
+
+        /** column name in join with shares */
+        public static final String COLUMN_NAME_SHARE_DIRECTORY = "share_directory";
+        public static final String COLUMN_NAME_VIRTUAL_DIRECTORY = "virtual_directory";
 
         private Virtuals() {}
         public static final String TABLE_NAME = "virtuals";
@@ -92,6 +99,41 @@ public final class Geebox {
         values.put(Shares.COLUMN_NAME_DIRECTORY, uri);
         Uri shareUri = aContentResolver.insert(Shares.CONTENT_URI, values);
         return Long.parseLong(shareUri.getLastPathSegment());
+    }
+
+    public static long makeVirtual(ContentResolver aContentResolver,
+                                   long aShareId, String aDir, String aName,
+                                   boolean aIsDir, long aPeerId, long aSize) {
+        long virtualId = getVirtual( aContentResolver, aShareId, aDir, aName );
+        if (virtualId >= 0) return virtualId;
+        ContentValues values = new ContentValues();
+        values.put(Virtuals.COLUMN_NAME_SHARE, aShareId);
+        values.put(Virtuals.COLUMN_NAME_DIRECTORY, aDir);
+        values.put(Virtuals.COLUMN_NAME_NAME, aName);
+        values.put(Virtuals.COLUMN_NAME_IS_DIR, aIsDir);
+        values.put(Virtuals.COLUMN_NAME_PEER, aPeerId);
+        values.put(Virtuals.COLUMN_NAME_SIZE, aSize);
+        Uri virtualUri = aContentResolver.insert(Virtuals.CONTENT_URI, values);
+        return Long.parseLong(virtualUri.getLastPathSegment());
+    }
+
+    private static long getVirtual(ContentResolver aContentResolver, long aShareId, String aDir, String aName) {
+        Cursor cursor =
+                aContentResolver.query(Virtuals.CONTENT_URI,
+                        null,
+                        Virtuals.COLUMN_NAME_SHARE + "= ? AND " +
+                                Virtuals.COLUMN_NAME_VIRTUALS_DIRECTORY + "= ? AND " +
+                                Virtuals.COLUMN_NAME_NAME + "= ? ",
+                        new String[]{String.valueOf(aShareId), aDir, aName},
+                        null);
+        try {
+            if (cursor.moveToFirst()) {
+                return cursor.getLong(cursor.getColumnIndexOrThrow(Virtuals._ID));
+            }
+        } finally {
+            cursor.close();
+        }
+        return -1;
     }
 
     public static long getShare(ContentResolver aContentResolver, Uri aUri) {
@@ -154,5 +196,30 @@ public final class Geebox {
         values.put(Peers.COLUMN_NAME_ADDRESS, aContact);
         Uri peerUri = aContentResolver.insert(Peers.CONTENT_URI, values);
         return Long.parseLong(peerUri.getLastPathSegment());
+    }
+
+    public static class VirtualFile extends File {
+        boolean mDirectory;
+
+        public VirtualFile(String path, boolean isDirectory) {
+            super(path);
+            mDirectory = isDirectory;
+        }
+
+        @Override
+        public boolean isDirectory() {
+            return mDirectory;
+        }
+    }
+
+    public static File virtualToFile(Cursor aCursor) {
+        String share = aCursor.getString(aCursor.getColumnIndexOrThrow(Virtuals.COLUMN_NAME_SHARE_DIRECTORY));
+        String dir = aCursor.getString( aCursor.getColumnIndexOrThrow( Virtuals.COLUMN_NAME_VIRTUAL_DIRECTORY ) );
+        String name = aCursor.getString( aCursor.getColumnIndexOrThrow( Virtuals.COLUMN_NAME_NAME ) );
+        boolean isDirectory =
+                1 == aCursor.getInt( aCursor.getColumnIndexOrThrow( Virtuals.COLUMN_NAME_IS_DIR ) );
+
+        String ROOT = "/" ; // FIXME we need a root
+        return new VirtualFile( ROOT + share + "/" + dir + "/" + name, isDirectory ) ;
     }
 }

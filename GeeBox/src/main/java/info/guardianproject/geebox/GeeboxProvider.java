@@ -60,7 +60,7 @@ public class GeeboxProvider extends ContentProvider {
                     + Shares._ID + " INTEGER PRIMARY KEY"
                     + "," + Shares.COLUMN_NAME_DIRECTORY + " TEXT NOT NULL"
                     + "," + Shares.COLUMN_NAME_REFERENCE + " TEXT NOT NULL"
-                    + "," + Shares.COLUMN_NAME_STATUS + " TEXT NOT NULL"
+                    + "," + Shares.COLUMN_NAME_STATUS + " TEXT NOT NULL DEFAULT 'new'"
                     + ");");
 
             db.execSQL("CREATE TABLE " + PeerShares.TABLE_NAME + " ("
@@ -68,7 +68,8 @@ public class GeeboxProvider extends ContentProvider {
                     + "," + PeerShares.COLUMN_NAME_PEER + " INTEGER NOT NULL"
                     + "," + PeerShares.COLUMN_NAME_SHARE + " INTEGER NOT NULL"
                     + "," + PeerShares.COLUMN_NAME_REFERENCE + " TEXT NOT NULL"
-                    + ", UNIQUE(" + PeerShares.COLUMN_NAME_SHARE + ", "
+                    + "," + PeerShares.COLUMN_NAME_STATUS + " TEXT NOT NULL DEFAULT 'new'"
+                    + ", UNIQUE(" + PeerShares.COLUMN_NAME_SHARE+ ", "
                     + PeerShares.COLUMN_NAME_PEER + ")"
                     + ");");
 
@@ -120,7 +121,8 @@ public class GeeboxProvider extends ContentProvider {
     private static final int VIRTUALS = 5;
     private static final int PEERS_ID = 11;
     private static final int SHARES_ID = 102;
-    private static final int PEER_SHARES_PEER_SHARE = 103;
+    private static final int PEER_SHARES_ID = 103;
+    private static final int PEER_SHARES_PEER_SHARE = 104;
     private static final int QUEUE_ID = 104;
     private static final int VIRTUALS_ID = 105;
 
@@ -135,6 +137,7 @@ public class GeeboxProvider extends ContentProvider {
         addMatcher("shares", Shares.TABLE_NAME, SHARES);
         addMatcher("shares/#", Shares.TABLE_NAME, SHARES_ID);
         addMatcher("peer_shares", PeerShares.TABLE_NAME, PEER_SHARES);
+        addMatcher("peer_shares/#", PeerShares.TABLE_NAME, PEER_SHARES_ID);
         addMatcher("peer_shares/#/#", PeerShares.TABLE_NAME, PEER_SHARES_PEER_SHARE);
         addMatcher("queue", Queue.TABLE_NAME, QUEUE);
         addMatcher("queue/#", Queue.TABLE_NAME, QUEUE_ID);
@@ -161,16 +164,29 @@ public class GeeboxProvider extends ContentProvider {
         if (match < 0)
             throw new IllegalArgumentException("Unknown URI " + uri);
         qb.setTables(sTableMap.get(match));
+        long id;
         switch (match) {
             case PEERS:
                 break;
             case SHARES:
                 break;
+            case PEER_SHARES_ID:
+                if (where != null)
+                    throw new IllegalArgumentException("no support for query by ID and a where clause");
+                id = Long.parseLong(uri.getLastPathSegment());
+                where = "peer_shares._id = ?";
+                whereArgs = new String[] {"" + id};
             case PEER_SHARES:
                 if (TextUtils.isEmpty(sortOrder)) {
                     sortOrder = "share_id, peer_id";
                 }
                 qb.setTables("peer_shares JOIN peers ON (peer_id = peers._id) JOIN shares ON (share_id = shares._id)");
+                projection = new String[] {
+                        "peer_shares.reference as peer_share_reference",
+                        "peer_shares.status as peer_share_status",
+                        "peer_id",
+                        "share_id"
+                };
                 break;
             case QUEUE:
                 break;

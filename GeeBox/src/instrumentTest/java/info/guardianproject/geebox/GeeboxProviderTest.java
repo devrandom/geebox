@@ -31,7 +31,7 @@ public class GeeboxProviderTest extends ProviderTestCase2<GeeboxProvider> {
     }
 
     public void testCreate() throws Exception {
-        Geebox.makePeer(mResolver, "me@here", "a@a");
+        long peerId = Geebox.makePeer(mResolver, "me@here", "a@a");
 
         Cursor cursor = mResolver.query(Peers.CONTENT_URI, null, null, null, null);
         assertNotNull(cursor);
@@ -40,13 +40,20 @@ public class GeeboxProviderTest extends ProviderTestCase2<GeeboxProvider> {
         assertEquals("a@a", cursor.getString(cursor.getColumnIndexOrThrow(Peers.COLUMN_NAME_ADDRESS)));
         cursor.close();
 
-        Geebox.makeShare(mResolver, Uri.parse("a/b/c"));
+        long shareId = Geebox.makeShare(mResolver, Uri.parse("a/b/c"));
         cursor = mResolver.query(Shares.CONTENT_URI, null, null, null, null);
         assertNotNull(cursor);
         assertEquals(1, cursor.getCount());
         assertTrue(cursor.moveToFirst());
         assertEquals("a/b/c", cursor.getString(cursor.getColumnIndexOrThrow(Shares.COLUMN_NAME_DIRECTORY)));
         cursor.close();
+
+        long peerShareId = Geebox.makePeerShare(mResolver, peerId, shareId);
+        long shareId1 = Geebox.makeShare(mResolver, Uri.parse("a/b/d"));
+        long peerShareId1 = Geebox.makePeerShare(mResolver, peerId, shareId1);
+        String peerShareReference = Geebox.getPeerShareReference(mResolver, peerShareId);
+        String peerShareReference1 = Geebox.getPeerShareReference(mResolver, peerShareId1);
+        assertTrue(peerShareReference != peerShareReference1);
     }
 
     public void testMutatePeer() throws Exception {

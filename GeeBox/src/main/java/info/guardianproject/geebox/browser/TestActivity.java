@@ -18,10 +18,12 @@ import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import info.guardianproject.geebox.GDataplugService;
 import info.guardianproject.geebox.Geebox;
 import info.guardianproject.geebox.R;
 
 import static info.guardianproject.geebox.Geebox.Peers;
+import static info.guardianproject.geebox.Geebox.getPeerShareReference;
 import static info.guardianproject.geebox.Geebox.makePeer;
 import static info.guardianproject.geebox.Geebox.makePeerShare;
 import static info.guardianproject.geebox.Geebox.makeShare;
@@ -119,6 +121,8 @@ public class TestActivity extends Activity implements LoaderManager.LoaderCallba
         long peerId = makePeer(getContentResolver(), aAccount, aPeer);
         long shareId = makeShare(getContentResolver(), aDirectory);
         long peerShareId = makePeerShare(getContentResolver(), peerId, shareId);
+        String aReference = getPeerShareReference(getContentResolver(), peerShareId);
+        GDataplugService.startService_invitePeer(this, aAccount, aPeer, aReference, aDirectory.getLastPathSegment());
         Toast.makeText(aActivity, "stuff " + peerShareId, Toast.LENGTH_LONG).show();
     }
 

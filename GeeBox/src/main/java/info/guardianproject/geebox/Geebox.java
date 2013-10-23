@@ -1,6 +1,7 @@
 package info.guardianproject.geebox;
 
 import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.net.Uri;
@@ -36,6 +37,7 @@ public final class Geebox {
 
         public static final String COLUMN_NAME_DIRECTORY = "directory";
         public static final String COLUMN_NAME_REFERENCE = "reference";
+        /** */
         public static final String COLUMN_NAME_STATUS = "status";
 
         private Shares() {}
@@ -49,6 +51,9 @@ public final class Geebox {
         public static final String COLUMN_NAME_SHARE = "share_id";
         /** share reference on peer */
         public static final String COLUMN_NAME_REFERENCE = "reference";
+        public static final String COLUMN_NAME_PEER_SHARE_REFERENCE = "peer_share_reference";
+        /** new, active */
+        public static final String COLUMN_NAME_STATUS = "status";
 
         private PeerShares() {}
         public static final String TABLE_NAME = "peer_shares";
@@ -153,6 +158,23 @@ public final class Geebox {
             cursor.close();
         }
         return -1;
+    }
+
+    public static String getPeerShareReference(ContentResolver aResolver, long peerShareId) {
+        Cursor cursor =
+                aResolver.query(ContentUris.withAppendedId(PeerShares.CONTENT_URI, peerShareId),
+                        null,
+                        null,
+                        null,
+                        null);
+        try {
+            if (cursor.moveToFirst()) {
+                return cursor.getString(cursor.getColumnIndexOrThrow(PeerShares.COLUMN_NAME_PEER_SHARE_REFERENCE));
+            }
+        } finally {
+            cursor.close();
+        }
+        return null;
     }
 
     public static long makePeerShare(ContentResolver aContentResolver, long peerId, long shareId) {

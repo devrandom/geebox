@@ -3,10 +3,6 @@
  */
 package info.guardianproject.geebox.browser;
 
-import info.guardianproject.geebox.Geebox;
-
-import java.io.File;
-
 import android.app.Activity;
 import android.content.Intent;
 import android.database.Cursor;
@@ -14,6 +10,11 @@ import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 
 import com.ipaulpro.afilechooser.FileChooserActivity;
+
+import java.io.File;
+import java.util.List;
+
+import info.guardianproject.geebox.Geebox;
 
 /**
  * Copyright (C) 2013 Lior Saar. All rights reserved.
@@ -33,8 +34,16 @@ public class FileBrowser extends FileChooserActivity implements FileChooserActiv
 	public File createVirtual( Cursor aCursor ) {
         return Geebox.virtualToFile(aCursor);
 	}
-	
-	@Override
+
+    @Override
+    public List<File> createVirtualList(Cursor aCursor) {
+        final boolean FAKE = true ;
+        if( FAKE ) aCursor = Geebox.createFakeVirtualCursor(getContentResolver(), "/x/y/", 2, 3) ;
+
+        return Geebox.virtualToFileList(aCursor);
+    }
+
+    @Override
 	public Loader<Cursor> getVirtualsCursorLoader(String aPath ) {
       // TODO filter by directory
       // TODO extract this to something that is passed in

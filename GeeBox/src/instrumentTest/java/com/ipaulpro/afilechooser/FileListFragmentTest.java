@@ -1,14 +1,10 @@
 package com.ipaulpro.afilechooser;
 
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.support.v4.content.Loader;
-import android.test.InstrumentationTestCase;
 import android.test.ProviderTestCase2;
 import android.test.mock.MockContentResolver;
-
-import junit.framework.Test;
 
 import java.io.File;
 import java.util.List;
@@ -41,6 +37,11 @@ public class FileListFragmentTest extends ProviderTestCase2<GeeboxProvider> {
             }
 
             @Override
+            public List<File> createVirtualList(Cursor aCursor) {
+                return Geebox.virtualToFileList(aCursor);
+            }
+
+            @Override
             public Loader<Cursor> getVirtualsCursorLoader(String mPath) {
                 return null;
             }
@@ -48,7 +49,7 @@ public class FileListFragmentTest extends ProviderTestCase2<GeeboxProvider> {
     }
 
 
-    public void testFileList() {
+    public void testVirtualList() {
         // share
         long shareId = Geebox.makeShare(mResolver, Uri.parse("a/b/c")) ;
         long peerId = Geebox.makePeer(mResolver, "me@here", "peer@there" );
@@ -56,9 +57,19 @@ public class FileListFragmentTest extends ProviderTestCase2<GeeboxProvider> {
         long virtualId = Geebox.makeVirtual(mResolver, shareId, "dir", "name", false, peerId, 0);
         // set
         Cursor cursor = mResolver.query(Geebox.Virtuals.CONTENT_URI, null, null, null, null);
-        List<File> list = mFragment.getVirtualList(cursor);
+        List<File> list = Geebox.virtualToFileList(cursor);
         assertEquals(1, list.size());
         File file = list.get(0);
         assertEquals("/a/b/c/dir/name", file.getPath());
+    }
+
+    public void testFakeVirtualList() {
+        int dirCount = 2 ;
+        int fileCount = 3 ;
+        Cursor cursor = Geebox.createFakeVirtualCursor(mResolver, "a/b/c", dirCount, fileCount);
+        List<File> list = Geebox.virtualToFileList(cursor);
+        assertEquals(dirCount*fileCount, list.size());
+        File file = list.get(0);
+        assertEquals("/a/b/c/dir0/filename0", file.getPath());
     }
 }

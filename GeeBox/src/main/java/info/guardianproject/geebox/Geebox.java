@@ -7,6 +7,8 @@ import android.net.Uri;
 import android.provider.BaseColumns;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author devrandom
@@ -221,5 +223,32 @@ public final class Geebox {
 
         String ROOT = "/" ; // FIXME we need a root
         return new VirtualFile( ROOT + share + "/" + dir + "/" + name, isDirectory ) ;
+    }
+
+    public static List<File> virtualToFileList(Cursor aCursor) {
+        List<File> list = new ArrayList<File>();
+        aCursor.moveToPosition(-1);
+        while( aCursor.moveToNext() ) {
+            File file = virtualToFile(aCursor) ;
+            list.add(file);
+        }
+        return list ;
+    }
+
+    public static Cursor createFakeVirtualCursor(ContentResolver mResolver, String aShare, int aDirCount, int aFileCount) {
+        // share
+        long shareId = makeShare(mResolver, Uri.parse( aShare )) ;
+        long peerId = makePeer(mResolver, "me@here", "peer@there" );
+        // make virtuals
+        for( int iDir = 0 ; iDir < aDirCount ; iDir++) {
+            for( int iFile = 0 ; iFile < aFileCount ; iFile++ ) {
+                String dirName = "dir" + iDir ;
+                String fileName = "filename" + iFile ;
+                long virtualId = makeVirtual(mResolver, shareId, dirName, fileName, false, peerId, 0);
+            }
+        }
+        // set
+        Cursor cursor = mResolver.query(Geebox.Virtuals.CONTENT_URI, null, null, null, null);
+        return cursor;
     }
 }

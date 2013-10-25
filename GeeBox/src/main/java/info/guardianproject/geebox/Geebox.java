@@ -5,6 +5,7 @@ import android.content.ContentUris;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Environment;
 import android.provider.BaseColumns;
 
 import java.io.File;
@@ -273,4 +274,18 @@ public final class Geebox {
         Cursor cursor = mResolver.query(Geebox.Virtuals.CONTENT_URI, null, null, null, null);
         return cursor;
     }
+
+    public static final class Config {
+        public static String getBasePath() {
+            String path = Environment.getExternalStorageDirectory() + File.separator + "GeeBox" + File.separator;
+            File file = new File( path ) ;
+            if( ! file.exists() ) {
+                if( ! file.mkdirs() ) {
+                    throw new RuntimeException( "ERROR: creating " + path );
+                }
+            }
+            return path;
+        }
+    }
+
 }

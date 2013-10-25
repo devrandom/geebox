@@ -5,10 +5,13 @@ package info.guardianproject.geebox.browser;
 
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Bundle;
+import android.os.Environment;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import info.guardianproject.geebox.Geebox;
 import info.guardianproject.geebox.R;
 
 /**
@@ -20,6 +23,13 @@ import info.guardianproject.geebox.R;
 public class MainBrowser extends FileBrowser {
 
     @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        mBasePath = Geebox.Config.getBasePath(); // FIXME how should this be done ?
+        mAppRootPath = Geebox.Config.getBasePath(); // FIXME how should this be done ?
+        super.onCreate(savedInstanceState);
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main, menu);
@@ -29,11 +39,17 @@ public class MainBrowser extends FileBrowser {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.action_add:
-                FileBrowser.startActivityForResult(this, REQUEST_CODE_FILE_BROWSER);
+            case R.id.action_add_asset:
+                FileBrowser.startActivityForResult(this, REQUEST_CODE_FILE_BROWSER, Environment.getExternalStorageDirectory().getAbsolutePath() );
+                break;
+            case R.id.action_new_folder:
+                Toast.makeText(this, "New Folder", Toast.LENGTH_SHORT).show();
+                break;
+            case R.id.action_share_folder:
+                Toast.makeText(this, "Share Folder", Toast.LENGTH_SHORT).show();
                 break;
             case R.id.action_settings:
-                Toast.makeText(this, "Settings !", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Settings", Toast.LENGTH_SHORT).show();
                 break;
 
             default:

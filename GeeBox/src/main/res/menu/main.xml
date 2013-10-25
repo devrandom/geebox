@@ -1,10 +1,25 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
 
     <item
-        android:id="@+id/action_add"
+        android:id="@+id/action_add_asset"
+        android:icon="@drawable/geebox_add_asset"
         android:orderInCategory="100"
         android:showAsAction="always"
         android:title="Add"/>
+
+    <item
+        android:id="@+id/action_new_folder"
+        android:orderInCategory="101"
+        android:icon="@drawable/geebox_new_folder"
+        android:showAsAction="always"
+        android:title="New"/>
+
+    <item
+        android:id="@+id/action_share_folder"
+        android:orderInCategory="102"
+        android:icon="@drawable/geebox_share_folder"
+        android:showAsAction="ifRoom"
+        android:title="Share"/>
 
     <item
         android:id="@+id/action_settings"

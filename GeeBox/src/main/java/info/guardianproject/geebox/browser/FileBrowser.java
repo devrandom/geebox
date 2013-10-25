@@ -28,9 +28,10 @@ public class FileBrowser extends FileChooserActivity implements FileChooserActiv
     protected static final int REQUEST_CODE_FOLDER_BROWSER_MOVE = 6663;
 
     // FIXME make VirtualsFactory an inner class
-	public static void startActivityForResult(Activity aActivity, int aRequestCode) {
+	public static void startActivityForResult(Activity aActivity, int aRequestCode, String aBaseApth ) {
 		Intent intent = new Intent(aActivity, FileBrowser.class);
 		intent.setAction( ACTION_FILE_BROWSER );
+        intent.putExtra( EXTRA_BASE_PATH, aBaseApth);
 		aActivity.startActivityForResult(intent, aRequestCode);
 	}
 	

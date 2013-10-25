@@ -124,7 +124,7 @@ public class TestActivity extends Activity implements LoaderManager.LoaderCallba
     }
 
     protected void onClickFilePicker(Activity aActivity) {
-		FileBrowser.startActivityForResult(aActivity, FileBrowser.REQUEST_CODE_FILE_BROWSER);
+		FileBrowser.startActivityForResult(aActivity, FileBrowser.REQUEST_CODE_FILE_BROWSER, Geebox.Config.getBasePath());
 	}
 
 	protected void onClickFolderPicker(Activity aActivity) {

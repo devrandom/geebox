@@ -23,6 +23,10 @@ import info.guardianproject.geebox.Geebox;
  * 
  */
 public class FileBrowser extends FileChooserActivity implements FileChooserActivity.VirtualsFactory {
+    protected static final int REQUEST_CODE_FOLDER_BROWSER = 6661;
+    protected static final int REQUEST_CODE_FILE_BROWSER = 6662;
+    protected static final int REQUEST_CODE_FOLDER_BROWSER_MOVE = 6663;
+
     // FIXME make VirtualsFactory an inner class
 	public static void startActivityForResult(Activity aActivity, int aRequestCode) {
 		Intent intent = new Intent(aActivity, FileBrowser.class);
@@ -56,4 +60,5 @@ public class FileBrowser extends FileChooserActivity implements FileChooserActiv
     public VirtualsFactory getVirtualsFactory() {
         return this;
     }
+
 }

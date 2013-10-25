@@ -40,7 +40,11 @@
         <activity
             android:name="info.guardianproject.geebox.browser.FolderBrowser" >
         </activity>
-        
+
+        <activity
+            android:name="info.guardianproject.geebox.browser.MainBrowser" >
+        </activity>
+
         <activity
             android:name="info.guardianproject.geebox.browser.FileBrowser" >
         </activity>

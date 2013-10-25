@@ -30,9 +30,6 @@ import static info.guardianproject.geebox.Geebox.makeShare;
 
 public class TestActivity extends Activity implements LoaderManager.LoaderCallbacks<Cursor> {
 
-    private static final int REQUEST_CODE_FOLDER_BROWSER = 6661;
-	private static final int REQUEST_CODE_FILE_BROWSER = 6662;
-	private static final int REQUEST_CODE_FOLDER_BROWSER_MOVE = 6663;
     public static final int REQUEST_CODE_INVITE_CONTACT = 6664;
     private SimpleCursorAdapter mAdapter;
 
@@ -127,11 +124,11 @@ public class TestActivity extends Activity implements LoaderManager.LoaderCallba
     }
 
     protected void onClickFilePicker(Activity aActivity) {
-		FileBrowser.startActivityForResult(aActivity, REQUEST_CODE_FILE_BROWSER);
+		FileBrowser.startActivityForResult(aActivity, FileBrowser.REQUEST_CODE_FILE_BROWSER);
 	}
 
 	protected void onClickFolderPicker(Activity aActivity) {
-		FolderBrowser.startActivity(aActivity, REQUEST_CODE_FOLDER_BROWSER);
+		FolderBrowser.startActivity(aActivity, FileBrowser.REQUEST_CODE_FOLDER_BROWSER);
 	}
 	
 	protected void onClickRename(final Activity aActivity, final Uri aSourceUri ) {
@@ -163,7 +160,7 @@ public class TestActivity extends Activity implements LoaderManager.LoaderCallba
 	}
 	
 	protected void onClickMove(Activity aActivity) {
-		FolderBrowser.startActivity(aActivity, REQUEST_CODE_FOLDER_BROWSER_MOVE);
+		FolderBrowser.startActivity(aActivity, FileBrowser.REQUEST_CODE_FOLDER_BROWSER_MOVE);
 	}
 	
 	
@@ -184,21 +181,21 @@ public class TestActivity extends Activity implements LoaderManager.LoaderCallba
     @Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		switch (requestCode) {
-            case REQUEST_CODE_FOLDER_BROWSER:
+            case FileBrowser.REQUEST_CODE_FOLDER_BROWSER:
                 if( ! isOK( resultCode, data )) {
                     return ;
                 }
                 doFolderPicked( data.getData() );
                 break ;
 
-            case REQUEST_CODE_FILE_BROWSER:
+            case FileBrowser.REQUEST_CODE_FILE_BROWSER:
                 if( ! isOK( resultCode, data )) {
                     return ;
                 }
                 doFilePicked( data.getData() );
                 break ;
 
-            case REQUEST_CODE_FOLDER_BROWSER_MOVE:
+            case FileBrowser.REQUEST_CODE_FOLDER_BROWSER_MOVE:
                 if( ! isOK( resultCode, data )) {
                     return ;
                 }

@@ -53,6 +53,8 @@ public final class Geebox {
         /** share reference on peer */
         public static final String COLUMN_NAME_REFERENCE = "reference";
         public static final String COLUMN_NAME_PEER_SHARE_REFERENCE = "peer_share_reference";
+        /** share directory */
+        public static final String COLUMN_NAME_SHARES_DIRECTORY = "shares.directory";
         /** new, active */
         public static final String COLUMN_NAME_STATUS = "status";
 

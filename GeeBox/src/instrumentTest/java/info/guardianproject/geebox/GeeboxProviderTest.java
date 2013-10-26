@@ -54,6 +54,9 @@ public class GeeboxProviderTest extends ProviderTestCase2<GeeboxProvider> {
         String peerShareReference = Geebox.getPeerShareReference(mResolver, peerShareId);
         String peerShareReference1 = Geebox.getPeerShareReference(mResolver, peerShareId1);
         assertTrue(peerShareReference != peerShareReference1);
+
+        long peerShareId_same = Geebox.makePeerShare(mResolver, peerId, shareId);
+        assertEquals(peerShareId, peerShareId_same);
     }
 
     public void testMutatePeer() throws Exception {

@@ -257,7 +257,7 @@ public class TestActivity extends Activity implements LoaderManager.LoaderCallba
         if (mPickedUri == null)
             return null;
         return new CursorLoader(this, Geebox.PeerShares.CONTENT_URI, null,
-                Geebox.Shares.COLUMN_NAME_DIRECTORY + "= ?",
+                Geebox.PeerShares.COLUMN_NAME_SHARES_DIRECTORY + "= ?",
                 new String[] {mPickedUri.toString()}, null);
     }
 

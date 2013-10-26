@@ -31,7 +31,7 @@ import static info.guardianproject.geebox.Geebox.Virtuals;
  */
 public class GeeboxProvider extends ContentProvider {
     private static final String TAG = "GeeBox.Provider";
-    private static final int DATABASE_VERSION = 104;
+    private static final int DATABASE_VERSION = 105;
     private static final String DATABASE_NAME = "geebox.db";
 
     private DatabaseHelper mHelper;
@@ -108,6 +108,10 @@ public class GeeboxProvider extends ContentProvider {
             Log.w(TAG, "Upgrading database from version " + oldVersion + " to "
                     + newVersion + ", which will destroy all old data");
             db.execSQL("DROP TABLE IF EXISTS " + Peers.TABLE_NAME);
+            db.execSQL("DROP TABLE IF EXISTS " + Shares.TABLE_NAME);
+            db.execSQL("DROP TABLE IF EXISTS " + PeerShares.TABLE_NAME);
+            db.execSQL("DROP TABLE IF EXISTS " + Virtuals.TABLE_NAME);
+            db.execSQL("DROP TABLE IF EXISTS " + Queue.TABLE_NAME);
             onCreate(db);
         }
     }
@@ -182,6 +186,7 @@ public class GeeboxProvider extends ContentProvider {
                 }
                 qb.setTables("peer_shares JOIN peers ON (peer_id = peers._id) JOIN shares ON (share_id = shares._id)");
                 projection = new String[] {
+                        "peer_shares._id as _id",
                         "peer_shares.reference as peer_share_reference",
                         "peer_shares.status as peer_share_status",
                         "peer_id",
@@ -276,7 +281,7 @@ public class GeeboxProvider extends ContentProvider {
     private String makeReference() {
         byte[] bytes = new byte[16];
         mRandom.nextBytes(bytes);
-        return Base64.encodeToString(bytes, Base64.DEFAULT);
+        return Base64.encodeToString(bytes, Base64.NO_WRAP | Base64.URL_SAFE);
     }
 
     @Override

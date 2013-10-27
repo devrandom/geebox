@@ -277,6 +277,20 @@ public final class Geebox {
         return cursor;
     }
 
+    public static Cursor createFakeVirtualCursor(ContentResolver mResolver, String aShare ) {
+        // share
+        long shareId = makeShare(mResolver, Uri.parse( aShare )) ;
+        long peerId = makePeer(mResolver, "me@here", "peer@there" );
+        // make virtuals
+        for( int iFile = 2 ; iFile < 4 ; iFile++ ) {
+            String fileName = "file" + iFile ;
+            long virtualId = makeVirtual(mResolver, shareId, aShare, fileName, false, peerId, 0);
+        }
+        // set
+        Cursor cursor = mResolver.query(Geebox.Virtuals.CONTENT_URI, null, null, null, null);
+        return cursor;
+    }
+
     public static final class Config {
         public static String getBasePath() {
             String path = Environment.getExternalStorageDirectory() + File.separator + "GeeBox" + File.separator;

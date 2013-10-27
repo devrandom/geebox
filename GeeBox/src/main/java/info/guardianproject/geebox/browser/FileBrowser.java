@@ -6,6 +6,7 @@ package info.guardianproject.geebox.browser;
 import android.app.Activity;
 import android.content.Intent;
 import android.database.Cursor;
+import android.os.Bundle;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 
@@ -34,8 +35,15 @@ public class FileBrowser extends FileChooserActivity implements FileChooserActiv
         intent.putExtra( EXTRA_BASE_PATH, aBaseApth);
 		aActivity.startActivityForResult(intent, aRequestCode);
 	}
-	
-	@Override
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        mBasePath = Geebox.Config.getBasePath(); // FIXME how should this be done ?
+        mAppRootPath = Geebox.Config.getBasePath(); // FIXME how should this be done ?
+        super.onCreate(savedInstanceState);
+    }
+
+    @Override
 	public File createVirtual( Cursor aCursor ) {
         return Geebox.virtualToFile(aCursor);
 	}
@@ -43,13 +51,16 @@ public class FileBrowser extends FileChooserActivity implements FileChooserActiv
     @Override
     public List<File> createVirtualList(Cursor aCursor) {
         final boolean FAKE = true ;
-        if( FAKE ) aCursor = Geebox.createFakeVirtualCursor(getContentResolver(), "/x/y/", 2, 3) ;
+        if( FAKE ) aCursor = Geebox.createFakeVirtualCursor(getContentResolver(), mVirtualsPath ) ;
 
         return Geebox.virtualToFileList(aCursor);
     }
 
+    private String mVirtualsPath ;
+
     @Override
 	public Loader<Cursor> getVirtualsCursorLoader(String aPath ) {
+        mVirtualsPath = aPath ; // debug only - used in createFakeVirtualCursor
       // TODO filter by directory
       // TODO extract this to something that is passed in
       return new CursorLoader(this,

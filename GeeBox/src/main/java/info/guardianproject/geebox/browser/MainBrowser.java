@@ -5,13 +5,11 @@ package info.guardianproject.geebox.browser;
 
 import android.content.Intent;
 import android.net.Uri;
-import android.os.Bundle;
 import android.os.Environment;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
-import info.guardianproject.geebox.Geebox;
 import info.guardianproject.geebox.R;
 
 /**
@@ -21,13 +19,6 @@ import info.guardianproject.geebox.R;
  * 
  */
 public class MainBrowser extends FileBrowser {
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        mBasePath = Geebox.Config.getBasePath(); // FIXME how should this be done ?
-        mAppRootPath = Geebox.Config.getBasePath(); // FIXME how should this be done ?
-        super.onCreate(savedInstanceState);
-    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

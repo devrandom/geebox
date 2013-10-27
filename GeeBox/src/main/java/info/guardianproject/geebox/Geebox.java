@@ -163,6 +163,15 @@ public final class Geebox {
         return -1;
     }
 
+    public static void setPeerShareReference(ContentResolver aContentResolver, long peerShareId, String aReference) {
+        ContentValues values = new ContentValues();
+        values.put(PeerShares.COLUMN_NAME_REFERENCE, aReference);
+        aContentResolver.update(
+                ContentUris.withAppendedId(PeerShares.CONTENT_URI, peerShareId),
+                values, null, null
+        );
+    }
+
     public static String getPeerShareReference(ContentResolver aResolver, long peerShareId) {
         Cursor cursor =
                 aResolver.query(ContentUris.withAppendedId(PeerShares.CONTENT_URI, peerShareId),
@@ -180,7 +189,7 @@ public final class Geebox {
         return null;
     }
 
-    public static long makePeerShare(ContentResolver aContentResolver, long peerId, long shareId) {
+    public static long makePeerShare(ContentResolver aContentResolver, long peerId, long shareId, String aReference) {
         Cursor cursor =
                 aContentResolver.query(PeerShares.CONTENT_URI,
                         null,
@@ -200,6 +209,7 @@ public final class Geebox {
         values = new ContentValues();
         values.put(PeerShares.COLUMN_NAME_PEER, peerId);
         values.put(PeerShares.COLUMN_NAME_SHARE, shareId);
+        values.put(PeerShares.COLUMN_NAME_REFERENCE, aReference);
         Uri peerShareUri = aContentResolver.insert(PeerShares.CONTENT_URI, values);
         return Long.parseLong(peerShareUri.getLastPathSegment());
     }

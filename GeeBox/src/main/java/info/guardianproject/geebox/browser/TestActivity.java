@@ -117,9 +117,9 @@ public class TestActivity extends Activity implements LoaderManager.LoaderCallba
     protected void onActivityResultInvite(Activity aActivity, Uri aDirectory, String aAccount, String aPeer) {
         long peerId = makePeer(getContentResolver(), aAccount, aPeer);
         long shareId = makeShare(getContentResolver(), aDirectory);
-        long peerShareId = makePeerShare(getContentResolver(), peerId, shareId);
+        long peerShareId = makePeerShare(getContentResolver(), peerId, shareId, null);
         String aReference = getPeerShareReference(getContentResolver(), peerShareId);
-        GDataplugService.startService_invitePeer(this, aAccount, aPeer, aReference, aDirectory.getLastPathSegment());
+        GDataplugService.startService_invitePeer(this, aAccount, aPeer, aReference, aDirectory.getLastPathSegment(), peerShareId);
         Toast.makeText(aActivity, "stuff " + peerShareId, Toast.LENGTH_LONG).show();
     }
 

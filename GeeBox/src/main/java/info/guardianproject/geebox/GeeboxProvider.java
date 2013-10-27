@@ -330,6 +330,8 @@ public class GeeboxProvider extends ContentProvider {
                 break;
             case VIRTUALS_ID:
                 break;
+            case PEER_SHARES_ID:
+                break;
             default:
                 throw new IllegalArgumentException("Unknown URI for update " + uri);
         }

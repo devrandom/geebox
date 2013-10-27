@@ -11,6 +11,8 @@ import android.util.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.UnsupportedEncodingException;
+
 import info.guardianproject.otr.dataplug.DataplugService;
 
 public class GDataplugService extends DataplugService {
@@ -18,6 +20,7 @@ public class GDataplugService extends DataplugService {
 	private static final String REGISTRATION =
 			"{ 'descriptor': 	{ 'uri': 'chatsecure:/geebox', 'name': 'ChatSecure Filebox' }, 'meta': { 'publish' : true } }";
     private static final int INVITE_NOTIFICATIONS = 4000;
+    private static final int INVITE_ACCEPT_NOTIFICATIONS = 4001;
     private NotificationManager mNotificationManager;
 
     @Override
@@ -47,8 +50,6 @@ public class GDataplugService extends DataplugService {
         } else {
             Log.e(TAG, "Unknown URI");
         }
-		// TODO Auto-generated method stub
-
 	}
 
     private void notifyInvite(Request aRequest) {
@@ -57,30 +58,34 @@ public class GDataplugService extends DataplugService {
         String aReference = aUri.getLastPathSegment();
         String aName = aUri.getQueryParameter("name");
 
-        PendingIntent intent = makeInviteIntent(
+        PendingIntent intent = makeInvitePendingIntent(
                 aRequest.getAccountId(),
                 aRequest.getFriendId(),
-                aReference, aName);
+                aReference, aName,
+                aRequest.getId());
         Notification.Builder builder = new Notification.Builder(this).
                 setContentTitle("Invite").
                 setContentText("from " + aRequest.getFriendId() + " for " + aName).
                 setSmallIcon(R.drawable.geebox_icon).
                 setTicker(aRequest.getFriendId() + " shared " + aName).
-                setContentIntent(intent).setAutoCancel(false);
+                setContentIntent(intent).setAutoCancel(true);
         Notification notification = builder.build();
 
         mNotificationManager.notify(INVITE_NOTIFICATIONS, notification);
 
     }
 
-    private PendingIntent makeInviteIntent(String aAccountId, String aFriendId, String aReference, String aName) {
-        Intent intent =
-                new Intent(this, InviteAcceptActivity.class)
-                        .putExtra(Api.EXTRA_ACCOUNT_ID, aAccountId)
-                        .putExtra(Api.EXTRA_FRIEND_ID, aFriendId)
-                        .putExtra(Api.EXTRA_REFERENCE, aReference)
-                        .putExtra(Api.EXTRA_NAME, aName)
-                ;
+    private PendingIntent makeInvitePendingIntent(String aAccountId, String aFriendId, String aReference, String aName, String aRequestId) {
+        Intent intent = InviteAcceptActivity.makeInviteIntent(this, aAccountId, aFriendId, aReference, aName, aRequestId);
+        PendingIntent contentIntent =
+                PendingIntent.getActivity(this, 0,
+                        intent,
+                        PendingIntent.FLAG_UPDATE_CURRENT);
+        return contentIntent;
+    }
+
+    private PendingIntent makeInviteAcceptedPendingIntent(String aAccountId, String aFriendId, String aName) {
+        Intent intent = InviteAcceptActivity.makeInviteAcceptedIntent(this, aAccountId, aFriendId, aName);
         PendingIntent contentIntent =
                 PendingIntent.getActivity(this, 0,
                         intent,
@@ -100,22 +105,35 @@ public class GDataplugService extends DataplugService {
         return START_NOT_STICKY;
     }
 
-    private boolean handleIntent(Intent intent) {
+    private boolean handleIntent(Intent intent) throws JSONException, UnsupportedEncodingException {
         if (Api.ACTION_INVITE_PEER.equals(intent.getAction())) {
             String aAccountId = intent.getStringExtra(Api.EXTRA_ACCOUNT_ID);
             String aFriendId = intent.getStringExtra(Api.EXTRA_FRIEND_ID);
             String aName = intent.getStringExtra(Api.EXTRA_NAME);
             String aReference = intent.getStringExtra(Api.EXTRA_REFERENCE);
+            final long aPeerShareId = intent.getLongExtra(Api.EXTRA_PEER_SHARE_ID, -1);
             Uri aUri = new Uri.Builder()
                     .scheme("chatsecure")
                     .path("/geebox/invite/")
                     .appendPath(aReference)
                     .appendQueryParameter("name", aName).build();
+            final PendingIntent pendingIntent = makeInviteAcceptedPendingIntent(
+                    aAccountId,
+                    aFriendId,
+                    aName);
+            Notification.Builder builder = new Notification.Builder(this).
+                    setContentTitle("Invite Accepted").
+                    setContentText("by " + aFriendId + " for " + aName).
+                    setSmallIcon(R.drawable.geebox_icon).
+                    setTicker(aFriendId + " accepted " + aName).
+                    setContentIntent(pendingIntent).setAutoCancel(true);
+            final Notification notification = builder.build();
+
             sendOutgoingRequest( aAccountId, aFriendId, "OFFER", aUri.toString(), null, new RequestCallback() {
                 @Override
                 public void onResponse(Request aRequest, byte[] aContent, String headersString) {
                     try {
-                        handleIncomingResponseInvite(aRequest, aContent) ;
+                        handleIncomingResponseInvite(aPeerShareId, notification, aContent) ;
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -124,11 +142,29 @@ public class GDataplugService extends DataplugService {
 
             return true;
         }
+
+        if (Api.ACTION_RESPOND_INVITE_PEER.equals(intent.getAction())) {
+            String aRequestId = intent.getStringExtra(Api.EXTRA_REQUEST_ID);
+            String aReference = intent.getStringExtra(Api.EXTRA_REFERENCE);
+            JSONObject object = new JSONObject();
+            object.put("reference", aReference);
+            sendOutgoingResponse(aRequestId, dumpJSONContent(object), null);
+
+            return true;
+        }
+
         return false;
     }
 
-    private void handleIncomingResponseInvite(Request aRequest, byte[] aContent) {
-        info("saw invite response");
+    private void handleIncomingResponseInvite(
+            long peerShareId,
+            Notification notification,
+            byte[] aContent) throws JSONException {
+        JSONObject json = parseJSONContent(aContent);
+        String reference = json.getString("reference");
+        info("saw invite response for " + peerShareId + " remote=" + reference);
+        Geebox.setPeerShareReference(getContentResolver(), peerShareId, reference);
+        mNotificationManager.notify(INVITE_ACCEPT_NOTIFICATIONS, notification);
     }
 
     @Override
@@ -140,16 +176,28 @@ public class GDataplugService extends DataplugService {
                                                String aAccount,
                                                String aPeer,
                                                String aReference,
-                                               String aName) {
+                                               String aName,
+                                               long aPeerShareId
+                                               ) {
         Intent intent = new Intent(aContext, GDataplugService.class);
         intent.setAction(Api.ACTION_INVITE_PEER);
         intent.putExtra(Api.EXTRA_ACCOUNT_ID, aAccount);
         intent.putExtra(Api.EXTRA_FRIEND_ID, aPeer);
         intent.putExtra(Api.EXTRA_REFERENCE, aReference);
         intent.putExtra(Api.EXTRA_NAME, aName);
+        intent.putExtra(Api.EXTRA_PEER_SHARE_ID, aPeerShareId);
         aContext.startService(intent);
     }
 
+    public static void startService_respondInvitePeer(Context aContext,
+                                               String aRequestId,
+                                               String aReference) {
+        Intent intent = new Intent(aContext, GDataplugService.class);
+        intent.setAction(Api.ACTION_RESPOND_INVITE_PEER);
+        intent.putExtra(Api.EXTRA_REQUEST_ID, aRequestId);
+        intent.putExtra(Api.EXTRA_REFERENCE, aReference);
+        aContext.startService(intent);
+    }
 
     private void error(String message) {
         Log.e(TAG, message);
@@ -157,5 +205,17 @@ public class GDataplugService extends DataplugService {
 
     private void info(String message) {
         Log.i(TAG, message);
+    }
+
+    private byte[] dumpJSONContent(JSONObject object) throws UnsupportedEncodingException {
+        return object.toString().getBytes(CHARSET);
+    }
+
+    private JSONObject parseJSONContent(byte[] aContent) throws JSONException {
+        try {
+            return new JSONObject(new String(aContent, CHARSET));
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

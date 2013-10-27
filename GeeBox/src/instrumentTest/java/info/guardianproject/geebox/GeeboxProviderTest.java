@@ -48,15 +48,17 @@ public class GeeboxProviderTest extends ProviderTestCase2<GeeboxProvider> {
         assertEquals("a/b/c", cursor.getString(cursor.getColumnIndexOrThrow(Shares.COLUMN_NAME_DIRECTORY)));
         cursor.close();
 
-        long peerShareId = Geebox.makePeerShare(mResolver, peerId, shareId);
+        String aReference = "ref1";
+        long peerShareId = Geebox.makePeerShare(mResolver, peerId, shareId, aReference);
         long shareId1 = Geebox.makeShare(mResolver, Uri.parse("a/b/d"));
-        long peerShareId1 = Geebox.makePeerShare(mResolver, peerId, shareId1);
+        long peerShareId1 = Geebox.makePeerShare(mResolver, peerId, shareId1, aReference);
         String peerShareReference = Geebox.getPeerShareReference(mResolver, peerShareId);
         String peerShareReference1 = Geebox.getPeerShareReference(mResolver, peerShareId1);
         assertTrue(peerShareReference != peerShareReference1);
 
-        long peerShareId_same = Geebox.makePeerShare(mResolver, peerId, shareId);
+        long peerShareId_same = Geebox.makePeerShare(mResolver, peerId, shareId, aReference);
         assertEquals(peerShareId, peerShareId_same);
+        Geebox.setPeerShareReference(mResolver, peerShareId, "ref2");
     }
 
     public void testMutatePeer() throws Exception {

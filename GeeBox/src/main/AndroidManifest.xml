@@ -28,12 +28,7 @@
             </intent-filter>
         </activity>
         
-        <activity
-            android:name="info.guardianproject.geebox.browser.FolderBrowser" >
-        </activity>
-
-        <activity
-            android:name="info.guardianproject.geebox.browser.MainBrowser" >
+        <activity android:name=".browser.MainBrowser" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -41,10 +36,12 @@
             </intent-filter>
         </activity>
 
-        <activity
-            android:name="info.guardianproject.geebox.browser.FileBrowser" >
+        <activity android:name=".browser.FileBrowser" >
         </activity>
-        
+
+        <activity android:name=".InviteAcceptActivity" android:theme="@android:style/Theme.NoDisplay" >
+        </activity>
+
         <!-- Dataplug -->
         <service android:name=".GDataplugService" android:exported="true">
             <intent-filter>

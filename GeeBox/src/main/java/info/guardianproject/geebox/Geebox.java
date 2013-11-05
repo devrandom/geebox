@@ -3,6 +3,8 @@ package info.guardianproject.geebox;
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.ContentValues;
+import android.content.Context;
+import android.content.CursorLoader;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Environment;
@@ -18,6 +20,13 @@ import java.util.List;
 public final class Geebox {
     public static final String AUTHORITY = "info.guardianproject.geebox";
     public static final String SCHEME = "content://";
+
+    public static CursorLoader getShareVirtualsCursorLoader( Context aContext, long aShareId, String aDir ) {
+        CursorLoader loader = new CursorLoader(aContext,
+                Virtuals.CONTENT_URI,
+                null, "share_id = ? AND virtuals.directory = ?", new String[]{"" + aShareId, aDir}, null);
+        return loader ;
+    }
 
     public static final class Peers implements BaseColumns{
         public static final Uri CONTENT_URI = Uri.parse(SCHEME + AUTHORITY + "/peers");
@@ -270,6 +279,9 @@ public final class Geebox {
         return list ;
     }
 
+    //TODO(lior) - move this to test utils
+
+    /** For testing */
     public static Cursor createFakeVirtualCursor(ContentResolver mResolver, String aShare, int aDirCount, int aFileCount) {
         // share
         long shareId = makeShare(mResolver, Uri.parse( aShare )) ;
@@ -287,6 +299,7 @@ public final class Geebox {
         return cursor;
     }
 
+    /** For testing */
     public static Cursor createFakeVirtualCursor(ContentResolver mResolver, String aShare ) {
         // share
         long shareId = makeShare(mResolver, Uri.parse( aShare )) ;

@@ -2,6 +2,9 @@ package info.guardianproject.geebox;
 
 import android.content.ContentUris;
 import android.content.ContentValues;
+import android.content.Context;
+import android.content.ContextWrapper;
+import android.content.CursorLoader;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
@@ -18,6 +21,7 @@ import static info.guardianproject.geebox.Geebox.Shares;
 public class GeeboxProviderTest extends ProviderTestCase2<GeeboxProvider> {
     private SQLiteDatabase mDb;
     private MockContentResolver mResolver;
+    private MyContextWrapper mWrappedContext;
 
     public GeeboxProviderTest() {
         super(GeeboxProvider.class, AUTHORITY);
@@ -28,6 +32,7 @@ public class GeeboxProviderTest extends ProviderTestCase2<GeeboxProvider> {
         super.setUp();
         mResolver = getMockContentResolver();
         mDb = getProvider().getHelperForTest().getWritableDatabase();
+        mWrappedContext = new MyContextWrapper(getMockContext());
     }
 
     public void testCreate() throws Exception {
@@ -82,4 +87,35 @@ public class GeeboxProviderTest extends ProviderTestCase2<GeeboxProvider> {
         assertFalse(cursor.moveToFirst());
         cursor.close();
     }
+
+    static class MyContextWrapper extends ContextWrapper {
+        MyContextWrapper(Context context) {
+            super(context);
+        }
+
+        @Override
+        public Context getApplicationContext() {
+            return getBaseContext();
+        }
+    }
+
+    public void testQuerySharePath() throws Exception {
+        long peerId = Geebox.makePeer(mResolver, "me@here", "a@a");
+        long share_ab = Geebox.makeShare(mResolver, Uri.parse("a/b"));
+        long share_ac = Geebox.makeShare(mResolver, Uri.parse("a/c"));
+        long virtual_m = Geebox.makeVirtual(mResolver, share_ab, "d1", "m", false, peerId, 0);
+        long virtual_n = Geebox.makeVirtual(mResolver, share_ab, "d1", "n", false, peerId, 0);
+        long virtual_o = Geebox.makeVirtual(mResolver, share_ab, "d2", "o", false, peerId, 0);
+        long virtual_x = Geebox.makeVirtual(mResolver, share_ac, "d1", "q", false, peerId, 0);
+
+        CursorLoader loader = Geebox.getShareVirtualsCursorLoader(mWrappedContext, share_ab, "d1");
+        Cursor cursor = loader.loadInBackground();
+        assertEquals(2, cursor.getCount());
+        cursor.moveToFirst();
+        assertEquals(virtual_m, cursor.getInt(cursor.getColumnIndexOrThrow("_id")));
+        cursor.moveToNext();
+        assertEquals(virtual_n, cursor.getInt(cursor.getColumnIndexOrThrow("_id")));
+        cursor.close();
+    }
+
 }

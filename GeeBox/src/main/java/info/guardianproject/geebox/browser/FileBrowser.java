@@ -11,10 +11,13 @@ import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 
 import com.ipaulpro.afilechooser.FileChooserActivity;
+import com.ipaulpro.afilechooser.VFS;
+import com.ipaulpro.afilechooser.VFile;
+import com.ipaulpro.afilechooser.VirtualsFactory;
 
-import java.io.File;
 import java.util.List;
 
+import info.guardianproject.geebox.GeeVFS;
 import info.guardianproject.geebox.Geebox;
 
 /**
@@ -23,7 +26,7 @@ import info.guardianproject.geebox.Geebox;
  * @author liorsaar
  * 
  */
-public class FileBrowser extends FileChooserActivity implements FileChooserActivity.VirtualsFactory {
+public class FileBrowser extends FileChooserActivity implements VirtualsFactory {
     protected static final int REQUEST_CODE_FOLDER_BROWSER = 6661;
     protected static final int REQUEST_CODE_FILE_BROWSER = 6662;
     protected static final int REQUEST_CODE_FOLDER_BROWSER_MOVE = 6663;
@@ -44,12 +47,12 @@ public class FileBrowser extends FileChooserActivity implements FileChooserActiv
     }
 
     @Override
-	public File createVirtual( Cursor aCursor ) {
+	public VFile createVirtual( Cursor aCursor ) {
         return Geebox.virtualToFile(aCursor);
 	}
 
     @Override
-    public List<File> createVirtualList(Cursor aCursor) {
+    public List<VFile> createVirtualList(Cursor aCursor) {
         final boolean FAKE = true ;
         if( FAKE ) aCursor = Geebox.createFakeVirtualCursor(getContentResolver(), mVirtualsPath ) ;
 
@@ -73,4 +76,8 @@ public class FileBrowser extends FileChooserActivity implements FileChooserActiv
         return this;
     }
 
+    @Override
+    public VFS getVFS() {
+        return new GeeVFS();
+    }
 }

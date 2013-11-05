@@ -30,14 +30,14 @@ public class FileListFragmentTest extends ProviderTestCase2<GeeboxProvider> {
         super.setUp();
         mResolver = getMockContentResolver();
         mFragment = new FileListFragment();
-        mFragment.setVirtualsFactory(new FileChooserActivity.VirtualsFactory() {
+        mFragment.setVirtualsFactory(new VirtualsFactory() {
             @Override
-            public File createVirtual(Cursor aCursor) {
+            public VFile createVirtual(Cursor aCursor) {
                 return Geebox.virtualToFile(aCursor);
             }
 
             @Override
-            public List<File> createVirtualList(Cursor aCursor) {
+            public List<VFile> createVirtualList(Cursor aCursor) {
                 return Geebox.virtualToFileList(aCursor);
             }
 
@@ -57,7 +57,7 @@ public class FileListFragmentTest extends ProviderTestCase2<GeeboxProvider> {
         long virtualId = Geebox.makeVirtual(mResolver, shareId, "dir", "name", false, peerId, 0);
         // set
         Cursor cursor = mResolver.query(Geebox.Virtuals.CONTENT_URI, null, null, null, null);
-        List<File> list = Geebox.virtualToFileList(cursor);
+        List<VFile> list = Geebox.virtualToFileList(cursor);
         assertEquals(1, list.size());
         File file = list.get(0);
         assertEquals("/a/b/c/dir/name", file.getPath());
@@ -67,7 +67,7 @@ public class FileListFragmentTest extends ProviderTestCase2<GeeboxProvider> {
         int dirCount = 2 ;
         int fileCount = 3 ;
         Cursor cursor = Geebox.createFakeVirtualCursor(mResolver, "a/b/c", dirCount, fileCount);
-        List<File> list = Geebox.virtualToFileList(cursor);
+        List<VFile> list = Geebox.virtualToFileList(cursor);
         assertEquals(dirCount*fileCount, list.size());
         File file = list.get(0);
         assertEquals("/a/b/c/dir0/filename0", file.getPath());

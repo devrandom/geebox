@@ -10,6 +10,8 @@ import android.net.Uri;
 import android.os.Environment;
 import android.provider.BaseColumns;
 
+import com.ipaulpro.afilechooser.VFile;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -123,7 +125,7 @@ public final class Geebox {
     public static long makeVirtual(ContentResolver aContentResolver,
                                    long aShareId, String aDir, String aName,
                                    boolean aIsDir, long aPeerId, long aSize) {
-        long virtualId = getVirtual( aContentResolver, aShareId, aDir, aName );
+        long virtualId = getVirtual(aContentResolver, aShareId, aDir, aName);
         if (virtualId >= 0) return virtualId;
         ContentValues values = new ContentValues();
         values.put(Virtuals.COLUMN_NAME_SHARE, aShareId);
@@ -244,10 +246,10 @@ public final class Geebox {
         return Long.parseLong(peerUri.getLastPathSegment());
     }
 
-    public static class VirtualFile extends File {
+    public static class GeeVFile extends VFile {
         boolean mDirectory;
 
-        public VirtualFile(String path, boolean isDirectory) {
+        public GeeVFile(String path, boolean isDirectory) {
             super(path);
             mDirectory = isDirectory;
         }
@@ -258,7 +260,7 @@ public final class Geebox {
         }
     }
 
-    public static File virtualToFile(Cursor aCursor) {
+    public static VFile virtualToFile(Cursor aCursor) {
         String share = aCursor.getString(aCursor.getColumnIndexOrThrow(Virtuals.COLUMN_NAME_SHARE_DIRECTORY));
         String dir = aCursor.getString( aCursor.getColumnIndexOrThrow( Virtuals.COLUMN_NAME_VIRTUAL_DIRECTORY ) );
         String name = aCursor.getString( aCursor.getColumnIndexOrThrow( Virtuals.COLUMN_NAME_NAME ) );
@@ -266,14 +268,14 @@ public final class Geebox {
                 1 == aCursor.getInt( aCursor.getColumnIndexOrThrow( Virtuals.COLUMN_NAME_IS_DIR ) );
 
         String ROOT = "/" ; // FIXME we need a root
-        return new VirtualFile( ROOT + share + "/" + dir + "/" + name, isDirectory ) ;
+        return new GeeVFile( ROOT + share + "/" + dir + "/" + name, isDirectory ) ;
     }
 
-    public static List<File> virtualToFileList(Cursor aCursor) {
-        List<File> list = new ArrayList<File>();
+    public static List<VFile> virtualToFileList(Cursor aCursor) {
+        List<VFile> list = new ArrayList<VFile>();
         aCursor.moveToPosition(-1);
         while( aCursor.moveToNext() ) {
-            File file = virtualToFile(aCursor) ;
+            VFile file = virtualToFile(aCursor) ;
             list.add(file);
         }
         return list ;

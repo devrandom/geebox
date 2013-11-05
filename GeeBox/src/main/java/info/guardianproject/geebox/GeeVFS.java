@@ -10,7 +10,6 @@ import android.support.v4.content.Loader;
 import com.ipaulpro.afilechooser.FileLoader;
 import com.ipaulpro.afilechooser.VFS;
 import com.ipaulpro.afilechooser.VFile;
-import com.ipaulpro.afilechooser.VirtualsFactory;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -25,7 +24,6 @@ public class GeeVFS implements VFS {
     private LoaderManager mLoaderManager;
     private int mStartLoaderId;
     private DataSetObserver mObserver;
-    private VirtualsFactory mVirtualsFactory;
     private List<VFile> mVirtuals;
     private List<VFile> mPhysicals;
     private String mPath;
@@ -53,11 +51,6 @@ public class GeeVFS implements VFS {
         mCursorLoaderCallback = new CursorLoaderCallback();
         getLoaderManager().initLoader(startLoaderId + 1, null, mCursorLoaderCallback);
 
-    }
-
-    @Override
-    public void setVirtualsFactory(VirtualsFactory virtualsFactory) {
-        mVirtualsFactory = virtualsFactory;
     }
 
     @Override
@@ -104,12 +97,16 @@ public class GeeVFS implements VFS {
             LoaderManager.LoaderCallbacks<Cursor> {
         @Override
         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-            return mVirtualsFactory.getVirtualsCursorLoader( mPath ) ;
+            long shareId=0; //FIXME 911
+            return Geebox.getShareVirtualsCursorLoader(mContext, shareId, mPath );
         }
 
         @Override
         public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-            mVirtuals = mVirtualsFactory.createVirtualList(data) ;
+            final boolean FAKE = true ;
+            if( FAKE ) data = Geebox.createFakeVirtualCursor(mContext.getContentResolver(), mPath ) ;
+
+            mVirtuals =  Geebox.virtualToFileList(data);
             mObserver.onChanged();
         }
 
@@ -118,5 +115,19 @@ public class GeeVFS implements VFS {
             mObserver.onInvalidated();
         }
     }
+
+//    @Override
+//    public VFile createVirtual( Cursor aCursor ) {
+//        return Geebox.virtualToFile(aCursor);
+//    }
+//
+//    @Override
+//    public List<VFile> createVirtualList(Cursor aCursor) {
+//        final boolean FAKE = true ;
+//        if( FAKE ) aCursor = Geebox.createFakeVirtualCursor(getContentResolver(), mVirtualsPath ) ;
+//
+//        return Geebox.virtualToFileList(aCursor);
+//    }
+
 
 }

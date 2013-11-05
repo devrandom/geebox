@@ -4,11 +4,11 @@ import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
-import android.content.CursorLoader;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.BaseColumns;
+import android.support.v4.content.CursorLoader;
 
 import com.ipaulpro.afilechooser.VFile;
 

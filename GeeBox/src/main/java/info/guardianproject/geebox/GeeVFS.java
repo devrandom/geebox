@@ -59,7 +59,7 @@ public class GeeVFS implements VFS {
         mVirtualsLoaderCallback = new VirtualsLoaderCallback();
         getLoaderManager().initLoader(startLoaderId + 1, null, mVirtualsLoaderCallback);
         mSharesLoaderCallback = new SharesLoaderCallback();
-        getLoaderManager().initLoader(startLoaderId + 1, null, mSharesLoaderCallback);
+        getLoaderManager().initLoader(startLoaderId + 2, null, mSharesLoaderCallback);
 
     }
 
@@ -119,7 +119,7 @@ public class GeeVFS implements VFS {
                     mLocals.add(new Geebox.GeeVFile(f.getPath(), f.isDirectory()));
                 }
             }
-
+            mObserver.onChanged();
         }
     }
 
@@ -133,6 +133,7 @@ public class GeeVFS implements VFS {
         @Override
         public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
             mSharesCursor = data;
+            onDataChanged();
         }
 
         @Override

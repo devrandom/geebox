@@ -2,7 +2,6 @@ package com.ipaulpro.afilechooser;
 
 import android.database.Cursor;
 import android.net.Uri;
-import android.support.v4.content.Loader;
 import android.test.ProviderTestCase2;
 import android.test.mock.MockContentResolver;
 
@@ -30,29 +29,13 @@ public class FileListFragmentTest extends ProviderTestCase2<GeeboxProvider> {
         super.setUp();
         mResolver = getMockContentResolver();
         mFragment = new FileListFragment();
-        mFragment.setVirtualsFactory(new VirtualsFactory() {
-            @Override
-            public VFile createVirtual(Cursor aCursor) {
-                return Geebox.virtualToFile(aCursor);
-            }
-
-            @Override
-            public List<VFile> createVirtualList(Cursor aCursor) {
-                return Geebox.virtualToFileList(aCursor);
-            }
-
-            @Override
-            public Loader<Cursor> getVirtualsCursorLoader(String mPath) {
-                return null;
-            }
-        });
     }
 
 
     public void testVirtualList() {
         // share
-        long shareId = Geebox.makeShare(mResolver, Uri.parse("a/b/c")) ;
-        long peerId = Geebox.makePeer(mResolver, "me@here", "peer@there" );
+        long shareId = Geebox.makeShare(mResolver, Uri.parse("/a/b/c")) ;
+        long peerId = Geebox.makePeer(mResolver, "me@here", "peer@there");
         // make virtual
         long virtualId = Geebox.makeVirtual(mResolver, shareId, "dir", "name", false, peerId, 0);
         // set

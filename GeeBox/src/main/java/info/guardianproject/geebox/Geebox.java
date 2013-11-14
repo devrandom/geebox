@@ -257,6 +257,13 @@ public final class Geebox {
         public boolean isDirectory() {
             return mDirectory;
         }
+
+        public long getShareId() {
+            return mShareId;
+        }
+        public boolean isShare() {
+            return mShareId >= 0;
+        }
     }
 
     public static VFile virtualToFile(Cursor aCursor) {
@@ -316,7 +323,7 @@ public final class Geebox {
     }
 
     public static final class Config {
-        public static String getBasePath() {
+        public static String getStoreRootPath() {
             String path = Environment.getExternalStorageDirectory() + File.separator + "GeeBox" + File.separator;
             File file = new File( path ) ;
             if( ! file.exists() ) {
@@ -338,7 +345,7 @@ public final class Geebox {
     public static CursorLoader getSharesCursorLoader( Context aContext, String aDir ) {
         CursorLoader loader = new CursorLoader(aContext,
                 Shares.CONTENT_URI,
-                null, "directory = ?", new String[]{aDir}, null);
+                null, "directory like ? || \"%\"", new String[]{aDir}, null);
         return loader;
     }
 

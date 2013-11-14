@@ -2,12 +2,10 @@ package info.guardianproject.geebox;
 
 import android.content.ContentUris;
 import android.content.ContentValues;
-import android.content.Context;
-import android.content.ContextWrapper;
-import android.content.CursorLoader;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
+import android.support.v4.content.CursorLoader;
 import android.test.ProviderTestCase2;
 import android.test.mock.MockContentResolver;
 
@@ -45,17 +43,17 @@ public class GeeboxProviderTest extends ProviderTestCase2<GeeboxProvider> {
         assertEquals("a@a", cursor.getString(cursor.getColumnIndexOrThrow(Peers.COLUMN_NAME_ADDRESS)));
         cursor.close();
 
-        long shareId = Geebox.makeShare(mResolver, Uri.parse("a/b/c"));
+        long shareId = Geebox.makeShare(mResolver, Uri.parse("/a/b/c"));
         cursor = mResolver.query(Shares.CONTENT_URI, null, null, null, null);
         assertNotNull(cursor);
         assertEquals(1, cursor.getCount());
         assertTrue(cursor.moveToFirst());
-        assertEquals("a/b/c", cursor.getString(cursor.getColumnIndexOrThrow(Shares.COLUMN_NAME_DIRECTORY)));
+        assertEquals("/a/b/c", cursor.getString(cursor.getColumnIndexOrThrow(Shares.COLUMN_NAME_DIRECTORY)));
         cursor.close();
 
         String aReference = "ref1";
         long peerShareId = Geebox.makePeerShare(mResolver, peerId, shareId, aReference);
-        long shareId1 = Geebox.makeShare(mResolver, Uri.parse("a/b/d"));
+        long shareId1 = Geebox.makeShare(mResolver, Uri.parse("/a/b/d"));
         long peerShareId1 = Geebox.makePeerShare(mResolver, peerId, shareId1, aReference);
         String peerShareReference = Geebox.getPeerShareReference(mResolver, peerShareId);
         String peerShareReference1 = Geebox.getPeerShareReference(mResolver, peerShareId1);
@@ -88,21 +86,10 @@ public class GeeboxProviderTest extends ProviderTestCase2<GeeboxProvider> {
         cursor.close();
     }
 
-    static class MyContextWrapper extends ContextWrapper {
-        MyContextWrapper(Context context) {
-            super(context);
-        }
-
-        @Override
-        public Context getApplicationContext() {
-            return getBaseContext();
-        }
-    }
-
     public void testQuerySharePath() throws Exception {
         long peerId = Geebox.makePeer(mResolver, "me@here", "a@a");
-        long share_ab = Geebox.makeShare(mResolver, Uri.parse("a/b"));
-        long share_ac = Geebox.makeShare(mResolver, Uri.parse("a/c"));
+        long share_ab = Geebox.makeShare(mResolver, Uri.parse("/a/b"));
+        long share_ac = Geebox.makeShare(mResolver, Uri.parse("/a/c"));
         long virtual_m = Geebox.makeVirtual(mResolver, share_ab, "d1", "m", false, peerId, 0);
         long virtual_n = Geebox.makeVirtual(mResolver, share_ab, "d1", "n", false, peerId, 0);
         long virtual_o = Geebox.makeVirtual(mResolver, share_ab, "d2", "o", false, peerId, 0);

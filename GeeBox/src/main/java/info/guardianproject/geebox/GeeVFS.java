@@ -23,6 +23,7 @@ import java.util.Map;
  * @author devrandom
  */
 public class GeeVFS implements VFS {
+    private final String mRootPath;
     private LoaderManager mLoaderManager;
     private int mStartLoaderId;
     private DataSetObserver mObserver;
@@ -39,6 +40,10 @@ public class GeeVFS implements VFS {
     private Cursor mSharesCursor;
     private SharesLoaderCallback mSharesLoaderCallback;
 
+    public GeeVFS(String aRootPath) {
+        mRootPath = aRootPath;
+    }
+
     public LoaderManager getLoaderManager() {
         return mLoaderManager;
     }
@@ -50,23 +55,27 @@ public class GeeVFS implements VFS {
 
     @Override
     public void onActivityCreated(Context aContext, LoaderManager loaderManager, int startLoaderId, String aPath) {
+        init(aPath);
         mContext = aContext;
         mLoaderManager = loaderManager;
         mStartLoaderId = startLoaderId;
+        getLoaderManager().initLoader(startLoaderId, null, mFileLoaderCallback);
+        getLoaderManager().initLoader(startLoaderId + 1, null, mVirtualsLoaderCallback);
+        getLoaderManager().initLoader(startLoaderId + 2, null, mSharesLoaderCallback);
+    }
+
+    // For testing
+    void init(String aPath) {
         mPath = aPath;
         mFileLoaderCallback = new FileLoaderCallback();
-        getLoaderManager().initLoader(startLoaderId, null, mFileLoaderCallback);
         mVirtualsLoaderCallback = new VirtualsLoaderCallback();
-        getLoaderManager().initLoader(startLoaderId + 1, null, mVirtualsLoaderCallback);
         mSharesLoaderCallback = new SharesLoaderCallback();
-        getLoaderManager().initLoader(startLoaderId + 2, null, mSharesLoaderCallback);
-
     }
 
     @Override
     public List<VFile> getVFiles() {
         ArrayList<VFile> vFiles = new ArrayList<VFile>();
-        if( mPhysicals != null )
+        if( mLocals != null )
             vFiles.addAll(mLocals);
         if( mVirtuals != null )
             vFiles.addAll(mVirtuals);
@@ -84,7 +93,8 @@ public class GeeVFS implements VFS {
             LoaderManager.LoaderCallbacks<List<File>> {
         @Override
         public Loader<List<File>> onCreateLoader(int id, Bundle args) {
-            return new FileLoader(mContext, mPath, false); //TODO isFolder
+            String fullPath = mRootPath + mPath;
+            return new FileLoader(mContext, fullPath, false); //TODO isFolder
         }
 
         @Override
@@ -111,12 +121,13 @@ public class GeeVFS implements VFS {
             }
             mLocals = new ArrayList<VFile>(mPhysicals.size());
             for (File f : mPhysicals) {
+                String virtualPath = f.getPath().substring(mRootPath.length());
                 // TODO directory flag
                 // TODO share flag
-                if (sharePaths.containsKey(f.getPath())) {
-                    mLocals.add(new Geebox.GeeVFile(f.getPath(), f.isDirectory(), sharePaths.get(f.getPath())));
+                if (sharePaths.containsKey(virtualPath)) {
+                    mLocals.add(new Geebox.GeeVFile(virtualPath, f.isDirectory(), sharePaths.get(virtualPath)));
                 } else {
-                    mLocals.add(new Geebox.GeeVFile(f.getPath(), f.isDirectory()));
+                    mLocals.add(new Geebox.GeeVFile(virtualPath, f.isDirectory()));
                 }
             }
             mObserver.onChanged();
@@ -153,8 +164,8 @@ public class GeeVFS implements VFS {
 
         @Override
         public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-            final boolean FAKE = true ;
-            if( FAKE ) data = Geebox.createFakeVirtualCursor(mContext.getContentResolver(), mPath ) ;
+//            final boolean FAKE = true ;
+//            if( FAKE ) data = Geebox.createFakeVirtualCursor(mContext.getContentResolver(), mPath ) ;
 
             mVirtuals =  Geebox.virtualToFileList(data);
         }
@@ -179,4 +190,18 @@ public class GeeVFS implements VFS {
 //    }
 
 
+    // For testing
+    FileLoaderCallback getFileLoaderCallback() {
+        return mFileLoaderCallback;
+    }
+
+    // For testing
+    SharesLoaderCallback getSharesLoaderCallback() {
+        return mSharesLoaderCallback;
+    }
+
+    // For testing
+    VirtualsLoaderCallback getVirtualsLoaderCallback() {
+        return mVirtualsLoaderCallback;
+    }
 }

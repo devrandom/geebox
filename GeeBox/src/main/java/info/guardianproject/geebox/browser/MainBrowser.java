@@ -5,10 +5,11 @@ package info.guardianproject.geebox.browser;
 
 import android.content.Intent;
 import android.net.Uri;
-import android.os.Environment;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
+
+import java.io.File;
 
 import info.guardianproject.geebox.R;
 
@@ -31,7 +32,8 @@ public class MainBrowser extends FileBrowser {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_add_asset:
-                FileBrowser.startActivityForResult(this, REQUEST_CODE_FILE_BROWSER, Environment.getExternalStorageDirectory().getAbsolutePath() );
+                String virtualRootPath = File.separator;
+                FileBrowser.startActivityForResult(this, REQUEST_CODE_FILE_BROWSER, virtualRootPath);
                 break;
             case R.id.action_new_folder:
                 Toast.makeText(this, "New Folder", Toast.LENGTH_SHORT).show();

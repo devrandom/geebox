@@ -15,7 +15,9 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author devrandom
@@ -24,12 +26,18 @@ public class GeeVFS implements VFS {
     private LoaderManager mLoaderManager;
     private int mStartLoaderId;
     private DataSetObserver mObserver;
+
+    private List<File> mPhysicals;
+
     private List<VFile> mVirtuals;
-    private List<VFile> mPhysicals;
+    private List<VFile> mLocals;
+
     private String mPath;
     private FileLoaderCallback mFileLoaderCallback;
-    private CursorLoaderCallback mCursorLoaderCallback;
+    private VirtualsLoaderCallback mVirtualsLoaderCallback;
     private Context mContext;
+    private Cursor mSharesCursor;
+    private SharesLoaderCallback mSharesLoaderCallback;
 
     public LoaderManager getLoaderManager() {
         return mLoaderManager;
@@ -48,8 +56,10 @@ public class GeeVFS implements VFS {
         mPath = aPath;
         mFileLoaderCallback = new FileLoaderCallback();
         getLoaderManager().initLoader(startLoaderId, null, mFileLoaderCallback);
-        mCursorLoaderCallback = new CursorLoaderCallback();
-        getLoaderManager().initLoader(startLoaderId + 1, null, mCursorLoaderCallback);
+        mVirtualsLoaderCallback = new VirtualsLoaderCallback();
+        getLoaderManager().initLoader(startLoaderId + 1, null, mVirtualsLoaderCallback);
+        mSharesLoaderCallback = new SharesLoaderCallback();
+        getLoaderManager().initLoader(startLoaderId + 1, null, mSharesLoaderCallback);
 
     }
 
@@ -57,7 +67,7 @@ public class GeeVFS implements VFS {
     public List<VFile> getVFiles() {
         ArrayList<VFile> vFiles = new ArrayList<VFile>();
         if( mPhysicals != null )
-            vFiles.addAll(mPhysicals);
+            vFiles.addAll(mLocals);
         if( mVirtuals != null )
             vFiles.addAll(mVirtuals);
         // TODO more sorts
@@ -79,12 +89,8 @@ public class GeeVFS implements VFS {
 
         @Override
         public void onLoadFinished(Loader<List<File>> loader, List<File> data) {
-            mPhysicals = new ArrayList<VFile>(data.size());
-            for (File f : data) {
-                // TODO directory flag
-                mPhysicals.add(new VFile(f.getPath()));
-            }
-            mObserver.onChanged();
+            mPhysicals = data;
+            onDataChanged();
         }
 
         @Override
@@ -93,7 +99,50 @@ public class GeeVFS implements VFS {
         }
     }
 
-    class CursorLoaderCallback implements
+    private void onDataChanged() {
+        if (mPhysicals != null && mSharesCursor != null) {
+            Map<String, Long> sharePaths = new HashMap<String, Long>();
+            mSharesCursor.moveToPosition(-1);
+            while (mSharesCursor.moveToNext()) {
+                String directory =
+                        mSharesCursor.getString(mSharesCursor.getColumnIndexOrThrow(Geebox.Shares.COLUMN_NAME_DIRECTORY));
+                long id = mSharesCursor.getLong(mSharesCursor.getColumnIndexOrThrow(Geebox.Shares._ID));
+                sharePaths.put(directory, id);
+            }
+            mLocals = new ArrayList<VFile>(mPhysicals.size());
+            for (File f : mPhysicals) {
+                // TODO directory flag
+                // TODO share flag
+                if (sharePaths.containsKey(f.getPath())) {
+                    mLocals.add(new Geebox.GeeVFile(f.getPath(), f.isDirectory(), sharePaths.get(f.getPath())));
+                } else {
+                    mLocals.add(new Geebox.GeeVFile(f.getPath(), f.isDirectory()));
+                }
+            }
+
+        }
+    }
+
+    class SharesLoaderCallback implements
+            LoaderManager.LoaderCallbacks<Cursor> {
+        @Override
+        public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+            return Geebox.getSharesCursorLoader(mContext, mPath);
+        }
+
+        @Override
+        public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+            mSharesCursor = data;
+        }
+
+        @Override
+        public void onLoaderReset(Loader<Cursor> loader) {
+            mSharesCursor = null;
+            mObserver.onInvalidated();
+        }
+    }
+
+    class VirtualsLoaderCallback implements
             LoaderManager.LoaderCallbacks<Cursor> {
         @Override
         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
@@ -107,7 +156,6 @@ public class GeeVFS implements VFS {
             if( FAKE ) data = Geebox.createFakeVirtualCursor(mContext.getContentResolver(), mPath ) ;
 
             mVirtuals =  Geebox.virtualToFileList(data);
-            mObserver.onChanged();
         }
 
         @Override

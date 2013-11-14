@@ -23,13 +23,6 @@ public final class Geebox {
     public static final String AUTHORITY = "info.guardianproject.geebox";
     public static final String SCHEME = "content://";
 
-    public static CursorLoader getShareVirtualsCursorLoader( Context aContext, long aShareId, String aDir ) {
-        CursorLoader loader = new CursorLoader(aContext,
-                Virtuals.CONTENT_URI,
-                null, "share_id = ? AND virtuals.directory = ?", new String[]{"" + aShareId, aDir}, null);
-        return loader ;
-    }
-
     public static final class Peers implements BaseColumns{
         public static final Uri CONTENT_URI = Uri.parse(SCHEME + AUTHORITY + "/peers");
 
@@ -247,11 +240,17 @@ public final class Geebox {
     }
 
     public static class GeeVFile extends VFile {
+        long mShareId;
         boolean mDirectory;
 
         public GeeVFile(String path, boolean isDirectory) {
+            this(path, isDirectory, -1);
+        }
+
+        public GeeVFile(String path, boolean isDirectory, long shareId) {
             super(path);
             mDirectory = isDirectory;
+            mShareId = shareId;
         }
 
         @Override
@@ -327,6 +326,20 @@ public final class Geebox {
             }
             return path;
         }
+    }
+
+    public static CursorLoader getShareVirtualsCursorLoader( Context aContext, long aShareId, String aDir ) {
+        CursorLoader loader = new CursorLoader(aContext,
+                Virtuals.CONTENT_URI,
+                null, "share_id = ? AND virtuals.directory = ?", new String[]{"" + aShareId, aDir}, null);
+        return loader ;
+    }
+
+    public static CursorLoader getSharesCursorLoader( Context aContext, String aDir ) {
+        CursorLoader loader = new CursorLoader(aContext,
+                Shares.CONTENT_URI,
+                null, "directory = ?", new String[]{aDir}, null);
+        return loader;
     }
 
 }
